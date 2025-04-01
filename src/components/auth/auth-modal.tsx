@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
 
@@ -15,10 +15,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogTitle>
+          {isLogin ? "Sign In" : "Sign Up"}
+        </DialogTitle>
         {isLogin ? (
-          <LoginForm onToggleForm={() => setIsLogin(false)} />
+          <LoginForm 
+            onToggleForm={() => setIsLogin(false)} 
+            onLoginSuccess={onClose}
+          />
         ) : (
-          <RegisterForm onToggleForm={() => setIsLogin(true)} />
+          <RegisterForm 
+            onToggleForm={() => setIsLogin(true)} 
+            onRegisterSuccess={onClose}
+          />
         )}
       </DialogContent>
     </Dialog>

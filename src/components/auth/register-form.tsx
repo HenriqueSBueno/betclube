@@ -8,39 +8,33 @@ import { Label } from "@/components/ui/label";
 
 interface RegisterFormProps {
   onToggleForm: () => void;
+  onRegisterSuccess?: () => void;
 }
 
-export function RegisterForm({ onToggleForm }: RegisterFormProps) {
+export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
-
-  const validatePasswords = () => {
-    if (password !== confirmPassword) {
-      setPasswordError("Passwords don't match");
-      return false;
-    }
-    if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
-      return false;
-    }
-    setPasswordError("");
-    return true;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validatePasswords()) {
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
       return;
     }
     
+    setPasswordError("");
     setIsLoading(true);
+    
     try {
-      await register(email, password);
+      const success = await register(email, password);
+      if (success && onRegisterSuccess) {
+        onRegisterSuccess();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +45,7 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
       <CardHeader>
         <CardTitle className="text-2xl">Register</CardTitle>
         <CardDescription>
-          Create a new account
+          Create an account to start voting
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -74,29 +68,23 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (confirmPassword) validatePasswords();
-              }}
+              onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input
-              id="confirm-password"
+              id="confirmPassword"
               type="password"
               value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                if (password) validatePasswords();
-              }}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={isLoading}
             />
             {passwordError && (
-              <p className="text-destructive text-xs">{passwordError}</p>
+              <p className="text-sm text-destructive">{passwordError}</p>
             )}
           </div>
         </CardContent>
@@ -104,9 +92,9 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isLoading || Boolean(passwordError && confirmPassword)}
+            disabled={isLoading}
           >
-            {isLoading ? "Creating account..." : "Create Account"}
+            {isLoading ? "Signing up..." : "Sign Up"}
           </Button>
           <div className="text-sm text-center mt-2">
             Already have an account?{" "}

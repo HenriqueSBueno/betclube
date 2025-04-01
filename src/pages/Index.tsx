@@ -5,11 +5,14 @@ import { Footer } from "@/components/layout/footer";
 import { RankingTabs } from "@/components/rankings/ranking-tabs";
 import { RankingCategory, DailyRanking } from "@/types";
 import { mockDb } from "@/lib/mockDb";
+import { useAuth } from "@/lib/auth";
+import { LandingPage } from "@/components/landing/landing-page";
 
 const Index = () => {
   const [categories, setCategories] = useState<RankingCategory[]>([]);
   const [rankings, setRankings] = useState<DailyRanking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Load data from mock database
@@ -27,21 +30,27 @@ const Index = () => {
       <Header />
       
       <main className="flex-1 container py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-3">
-            Betting Buzz Rankings
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover the top betting sites as voted by our community. Updated daily.
-          </p>
-        </div>
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-pulse text-lg">Loading rankings...</div>
-          </div>
+        {isAuthenticated ? (
+          <>
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold tracking-tight mb-3">
+                Betting Buzz Rankings
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Discover the top betting sites as voted by our community. Updated daily.
+              </p>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-pulse text-lg">Loading rankings...</div>
+              </div>
+            ) : (
+              <RankingTabs categories={categories} rankings={rankings} />
+            )}
+          </>
         ) : (
-          <RankingTabs categories={categories} rankings={rankings} />
+          <LandingPage />
         )}
       </main>
       

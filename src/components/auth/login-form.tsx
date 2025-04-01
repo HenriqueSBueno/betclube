@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 
 interface LoginFormProps {
   onToggleForm: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export function LoginForm({ onToggleForm }: LoginFormProps) {
+export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,10 @@ export function LoginForm({ onToggleForm }: LoginFormProps) {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const success = await login(email, password);
+      if (success && onLoginSuccess) {
+        onLoginSuccess();
+      }
     } finally {
       setIsLoading(false);
     }
