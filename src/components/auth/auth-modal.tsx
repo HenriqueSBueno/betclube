@@ -12,6 +12,14 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
 
+  const handleLoginSuccess = () => {
+    onClose();
+  };
+
+  const handleRegisterSuccess = () => {
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -21,12 +29,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {isLogin ? (
           <LoginForm 
             onToggleForm={() => setIsLogin(false)} 
-            onLoginSuccess={onClose}
+            onLoginSuccess={handleLoginSuccess}
           />
         ) : (
           <RegisterForm 
             onToggleForm={() => setIsLogin(true)} 
-            onRegisterSuccess={onClose}
+            onRegisterSuccess={handleRegisterSuccess}
           />
         )}
       </DialogContent>
