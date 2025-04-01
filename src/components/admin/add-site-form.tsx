@@ -25,7 +25,9 @@ const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
   url: z.string().url("Please enter a valid URL."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  categories: z.array(z.string()).nonempty("Select at least one category.")
+  categories: z.array(z.string()).nonempty("Select at least one category."),
+  commission: z.number().min(0).max(100).optional(),
+  ltv: z.number().min(0).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -46,7 +48,9 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
       name: "",
       url: "",
       description: "",
-      categories: []
+      categories: [],
+      commission: 0,
+      ltv: 0
     }
   });
 
@@ -63,7 +67,9 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
         category: values.categories,
         registrationDate: new Date(),
         adminOwnerId: user.id,
-        logoUrl: `https://placehold.co/100x50/FFD760/151515?text=${encodeURIComponent(values.name)}`
+        logoUrl: `https://placehold.co/100x50/FFD760/151515?text=${encodeURIComponent(values.name)}`,
+        commission: values.commission,
+        ltv: values.ltv
       });
       
       toast({
@@ -188,6 +194,60 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
             </FormItem>
           )}
         />
+        
+        {/* Campos de segurança apenas para admins */}
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+          <FormField
+            control={form.control}
+            name="commission"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Commission (%)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="100" 
+                    step="0.01"
+                    {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)} 
+                    value={field.value || 0}
+                    disabled={isSubmitting} 
+                  />
+                </FormControl>
+                <FormDescription>
+                  Admin-only field for tracking affiliate commission.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="ltv"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>LTV (Lifetime Value)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.01"
+                    {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)} 
+                    value={field.value || 0}
+                    disabled={isSubmitting} 
+                  />
+                </FormControl>
+                <FormDescription>
+                  Admin-only field for customer lifetime value.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Adding..." : "Add Site"}

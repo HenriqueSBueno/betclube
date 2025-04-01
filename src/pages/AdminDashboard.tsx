@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AddSiteForm } from "@/components/admin/add-site-form";
 import { AddCategoryForm } from "@/components/admin/add-category-form";
 import { GenerateRankingsForm } from "@/components/admin/generate-rankings-form";
+import { EditSiteForm } from "@/components/admin/edit-site-form";
 import { useAuth } from "@/lib/auth";
 import { RankingCategory, BettingSite, DailyRanking } from "@/types";
 import { mockDb } from "@/lib/mockDb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+import { Trash, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
   const [rankings, setRankings] = useState<DailyRanking[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
+  const [editingSite, setEditingSite] = useState<BettingSite | null>(null);
   const { toast } = useToast();
   
   // Load data from mock database
@@ -116,6 +118,11 @@ const AdminDashboard = () => {
         ? `${failCount} sites could not be deleted.` 
         : "All selected sites were successfully removed."
     });
+  };
+
+  // Edit site
+  const handleEditSite = (site: BettingSite) => {
+    setEditingSite(site);
   };
 
   // Show loading state if auth is still loading
@@ -210,7 +217,9 @@ const AdminDashboard = () => {
                           </TableHead>
                           <TableHead>Site</TableHead>
                           <TableHead>Categories</TableHead>
-                          <TableHead className="w-12">Action</TableHead>
+                          <TableHead>Commission</TableHead>
+                          <TableHead>LTV</TableHead>
+                          <TableHead className="w-20">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -234,25 +243,44 @@ const AdminDashboard = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete {site.name}?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will permanently delete the site. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => deleteSite(site.id)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                              <div className="font-medium">
+                                {site.commission ? `${site.commission}%` : "-"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {site.ltv ? `$${site.ltv.toFixed(2)}` : "-"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleEditSite(site)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete {site.name}?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete the site. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => deleteSite(site.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -359,6 +387,17 @@ const AdminDashboard = () => {
       </main>
       
       <Footer />
+      
+      {/* Form de edição de site */}
+      {editingSite && (
+        <EditSiteForm
+          site={editingSite}
+          categories={categories}
+          isOpen={!!editingSite}
+          onClose={() => setEditingSite(null)}
+          onSuccess={loadData}
+        />
+      )}
     </div>
   );
 };
