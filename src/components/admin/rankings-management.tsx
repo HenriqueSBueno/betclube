@@ -8,6 +8,7 @@ import { RankingsService } from "@/services/rankings-service";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { RankingCategory } from "@/types";
+import { RankingTest } from "@/components/admin/ranking-test";
 
 interface RankingsManagementProps {
   categories: RankingCategory[];
@@ -135,6 +136,9 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
               </CardContent>
             </Card>
           )}
+          
+          {/* Add the testing component */}
+          <RankingTest categories={categories} />
         </>
       )}
     </div>

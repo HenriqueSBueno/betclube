@@ -7,9 +7,11 @@ import { RankingList } from "./ranking-list";
 interface RankingTabsProps {
   categories: RankingCategory[];
   rankings: DailyRanking[];
+  onVote?: (rankingId: string, siteId: string, userId: string | null) => Promise<boolean>;
+  isInteractive?: boolean;
 }
 
-export function RankingTabs({ categories, rankings }: RankingTabsProps) {
+export function RankingTabs({ categories, rankings, onVote, isInteractive = true }: RankingTabsProps) {
   const [activeTab, setActiveTab] = useState(categories[0]?.id || "");
 
   return (
@@ -45,7 +47,12 @@ export function RankingTabs({ categories, rankings }: RankingTabsProps) {
                     Updated {new Date(ranking.generationDate).toLocaleDateString()}
                   </p>
                 </div>
-                <RankingList ranking={ranking} />
+                <RankingList 
+                  ranking={ranking} 
+                  sites={ranking.sites}
+                  onVote={onVote}
+                  isInteractive={isInteractive}
+                />
               </>
             ) : (
               <div className="text-center py-8">

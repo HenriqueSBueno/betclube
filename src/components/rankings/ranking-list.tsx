@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,19 +10,22 @@ import { cn } from "@/lib/utils";
 
 interface RankingListProps {
   ranking: DailyRanking | null;
-  sites: RankedSite[];
-  onVote: (rankingId: string, siteId: string, userId: string | null) => Promise<boolean>;
+  sites?: RankedSite[];
+  onVote?: (rankingId: string, siteId: string, userId: string | null) => Promise<boolean>;
   isInteractive?: boolean;
 }
 
-export function RankingList({ ranking, sites, onVote, isInteractive = true }: RankingListProps) {
+export function RankingList({ ranking, sites = [], onVote, isInteractive = true }: RankingListProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [votingId, setVotingId] = useState<string | null>(null);
   const [localSites, setSites] = useState<RankedSite[]>(sites);
 
+  // Use the sites from the ranking object if no sites were provided
+  const sitesToRender = sites.length > 0 ? sites : (ranking?.sites || []);
+
   const handleUpvote = async (siteId: string) => {
-    if (!isInteractive) return;
+    if (!isInteractive || !onVote) return;
     
     try {
       setVotingId(siteId);
@@ -37,7 +41,7 @@ export function RankingList({ ranking, sites, onVote, isInteractive = true }: Ra
           });
           // Atualiza os votos localmente
           setSites(prevSites => prevSites.map(site => {
-            if (site.id === siteId) {
+            if (site.siteId === siteId) {
               return { ...site, votes: site.votes + 1 };
             }
             return site;
@@ -64,7 +68,7 @@ export function RankingList({ ranking, sites, onVote, isInteractive = true }: Ra
     );
   }
 
-  if (localSites.length === 0) {
+  if (sitesToRender.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Nenhum site neste ranking</p>
@@ -74,37 +78,37 @@ export function RankingList({ ranking, sites, onVote, isInteractive = true }: Ra
 
   return (
     <div className="space-y-4">
-      {localSites.map((site) => (
-        <Card key={site.id} className={cn(
+      {sitesToRender.map((site, index) => (
+        <Card key={site.siteId} className={cn(
           "transition-all",
-          site.position <= 3 ? "border-primary/50" : ""
+          index < 3 ? "border-primary/50" : ""
         )}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-full font-bold",
-                site.position === 1 ? "bg-yellow-500 text-black" :
-                site.position === 2 ? "bg-gray-300 text-black" :
-                site.position === 3 ? "bg-amber-700 text-white" :
+                index === 0 ? "bg-yellow-500 text-black" :
+                index === 1 ? "bg-gray-300 text-black" :
+                index === 2 ? "bg-amber-700 text-white" :
                 "bg-muted text-muted-foreground"
               )}>
-                {site.position}
+                {index + 1}
               </div>
               
               <div>
-                <h3 className="font-medium">{site.name}</h3>
+                <h3 className="font-medium">{site.site.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {site.votes} votos
                 </p>
               </div>
             </div>
             
-            {isInteractive && (
+            {isInteractive && onVote && (
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleUpvote(site.site_id)}
-                disabled={votingId === site.site_id}
+                onClick={() => handleUpvote(site.siteId)}
+                disabled={votingId === site.siteId}
               >
                 <ChevronUp className="mr-1 h-4 w-4" />
                 Votar
