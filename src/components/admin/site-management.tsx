@@ -8,6 +8,7 @@ import { Trash, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSiteForm } from "@/components/admin/add-site-form";
 import { EditSiteForm } from "@/components/admin/edit-site-form";
+import { CsvImportExport } from "@/components/admin/csv-import-export";
 import { mockDb } from "@/lib/mockDb";
 import { BettingSite, RankingCategory } from "@/types";
 import {
@@ -107,20 +108,31 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   const handleEditSite = (site: BettingSite) => {
     setEditingSite(site);
   };
+  
+  const handleDataChange = () => {
+    setSites(mockDb.bettingSites.getAll());
+    onDataChange();
+  };
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add New Betting Site</CardTitle>
-          <CardDescription>
-            Add a new betting site to the database
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AddSiteForm categories={categories} onSuccess={onDataChange} />
-        </CardContent>
-      </Card>
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Betting Site</CardTitle>
+            <CardDescription>
+              Add a new betting site to the database
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AddSiteForm categories={categories} onSuccess={handleDataChange} />
+          </CardContent>
+        </Card>
+        
+        <div className="mt-6">
+          <CsvImportExport onDataChange={handleDataChange} />
+        </div>
+      </div>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -246,7 +258,7 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
           categories={categories}
           isOpen={!!editingSite}
           onClose={() => setEditingSite(null)}
-          onSuccess={onDataChange}
+          onSuccess={handleDataChange}
         />
       )}
     </div>
