@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryService } from "@/services/category-service";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,7 +45,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!user) {
+    if (!user || !user.id) {
       setError("Você precisa estar logado para adicionar categorias.");
       toast({
         variant: "destructive",
@@ -64,10 +64,6 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
         description: values.description,
         admin_owner_id: user.id
       });
-      
-      if (!user.id) {
-        throw new Error("ID de usuário não encontrado");
-      }
       
       const newCategory = await CategoryService.create({
         name: values.name,

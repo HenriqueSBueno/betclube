@@ -1,4 +1,3 @@
-
 export type UserRole = "admin" | "user";
 
 export interface User {
@@ -74,4 +73,14 @@ export interface RankingConfig {
   min_votes: number;
   max_votes: number;
   last_modified?: string;
+}
+
+export interface SiteManagementProps {
+  onDataChange: () => void;
+  categories?: RankingCategory[];
+}
+
+export interface RankingsManagementProps {
+  onDataChange: () => void;
+  categories?: RankingCategory[];
 }

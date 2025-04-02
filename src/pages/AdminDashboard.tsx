@@ -8,7 +8,7 @@ import { UserManagement } from "@/components/admin/user-management";
 import { SiteManagement } from "@/components/admin/site-management";
 import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {

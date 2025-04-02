@@ -15,14 +15,14 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao buscar categorias:", error);
-        return [];
+        throw error;
       }
 
       console.log("CategoryService: Categorias recebidas:", data);
       return data as RankingCategory[];
     } catch (error) {
       console.error("Error fetching categories:", error);
-      return [];
+      throw error;
     }
   }
 
@@ -40,14 +40,14 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao buscar categoria por ID:", error);
-        return null;
+        throw error;
       }
 
       console.log("CategoryService: Categoria encontrada:", data);
       return data as RankingCategory;
     } catch (error) {
       console.error("Error fetching category by ID:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -58,22 +58,27 @@ export class CategoryService {
     try {
       console.log("CategoryService: Criando categoria:", category);
       
+      // Verificar se temos todos os dados necessários
+      if (!category.name || !category.description || !category.admin_owner_id) {
+        throw new Error("Dados incompletos para criar categoria");
+      }
+      
       const { data, error } = await supabase
         .from("ranking_categories")
-        .insert(category)
+        .insert([category])
         .select()
         .single();
 
       if (error) {
         console.error("Erro ao criar categoria:", error);
-        return null;
+        throw error;
       }
 
       console.log("CategoryService: Categoria criada com sucesso:", data);
       return data as RankingCategory;
     } catch (error) {
       console.error("Error creating category:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -91,13 +96,13 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao atualizar categoria:", error);
-        return null;
+        throw error;
       }
 
       return data as RankingCategory;
     } catch (error) {
       console.error("Error updating category:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -113,13 +118,13 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao excluir categoria:", error);
-        return false;
+        throw error;
       }
 
       return true;
     } catch (error) {
       console.error("Error deleting category:", error);
-      return false;
+      throw error;
     }
   }
 }
