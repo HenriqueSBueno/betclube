@@ -8,15 +8,17 @@ export class CategoryService {
    */
   static async getAll(): Promise<RankingCategory[]> {
     try {
+      console.log("CategoryService: Buscando todas categorias");
       const { data, error } = await supabase
         .from("ranking_categories")
         .select("*");
 
       if (error) {
         console.error("Erro ao buscar categorias:", error);
-        throw error;
+        return [];
       }
 
+      console.log("CategoryService: Categorias recebidas:", data);
       return data as RankingCategory[];
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -29,6 +31,7 @@ export class CategoryService {
    */
   static async getById(id: string): Promise<RankingCategory | null> {
     try {
+      console.log(`CategoryService: Buscando categoria por ID: ${id}`);
       const { data, error } = await supabase
         .from("ranking_categories")
         .select("*")
@@ -37,10 +40,11 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao buscar categoria por ID:", error);
-        throw error;
+        return null;
       }
 
-      return data as RankingCategory | null;
+      console.log("CategoryService: Categoria encontrada:", data);
+      return data as RankingCategory;
     } catch (error) {
       console.error("Error fetching category by ID:", error);
       return null;
@@ -50,29 +54,22 @@ export class CategoryService {
   /**
    * Create a new category
    */
-  static async create(category: Omit<RankingCategory, "id">): Promise<RankingCategory | null> {
+  static async create(category: { name: string; description: string; admin_owner_id: string }): Promise<RankingCategory | null> {
     try {
-      console.log("Enviando dados para criação de categoria:", category);
-      
-      // Garantir que o objeto de categoria está corretamente formatado
-      const categoryData = {
-        name: category.name,
-        description: category.description,
-        admin_owner_id: category.admin_owner_id
-      };
+      console.log("CategoryService: Criando categoria:", category);
       
       const { data, error } = await supabase
         .from("ranking_categories")
-        .insert(categoryData)
+        .insert(category)
         .select()
         .single();
 
       if (error) {
         console.error("Erro ao criar categoria:", error);
-        throw error;
+        return null;
       }
 
-      console.log("Categoria criada com sucesso:", data);
+      console.log("CategoryService: Categoria criada com sucesso:", data);
       return data as RankingCategory;
     } catch (error) {
       console.error("Error creating category:", error);
@@ -94,7 +91,7 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao atualizar categoria:", error);
-        throw error;
+        return null;
       }
 
       return data as RankingCategory;
@@ -116,7 +113,7 @@ export class CategoryService {
 
       if (error) {
         console.error("Erro ao excluir categoria:", error);
-        throw error;
+        return false;
       }
 
       return true;

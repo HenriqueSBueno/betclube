@@ -1,140 +1,149 @@
-
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { 
+import React from 'react';
+import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { RankingsService } from "@/services/rankings-service";
-import { VotingService } from "@/services/voting-service";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RankingConfig } from "@/types";
+import { RankingCategory } from "@/types";
 
 const formSchema = z.object({
-  siteCount: z.number().min(3, "Must include at least 3 sites").max(20, "Maximum 20 sites allowed"),
-  voteRange: z.tuple([z.number(), z.number()])
-    .refine(([min, max]) => min < max, {
-      message: "Minimum votes must be less than maximum votes"
-    })
+  categoryId: z.string().min(1, "Selecione uma categoria."),
+  siteCount: z.string().refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num > 0;
+  }, "Número de sites deve ser maior que zero."),
+  minVotes: z.string().refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Votos mínimos devem ser um número não negativo."),
+  maxVotes: z.string().refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Votos máximos devem ser um número não negativo."),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 interface GenerateRankingsFormProps {
-  categoryId: string;
-  onSuccess: () => void;
+  categories: RankingCategory[];
+  onRankingGenerated: () => void;
 }
 
-export function GenerateRankingsForm({ categoryId, onSuccess }: GenerateRankingsFormProps) {
+export function GenerateRankingsForm({ categories, onRankingGenerated }: GenerateRankingsFormProps) {
   const { toast } = useToast();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isResettingVotes, setIsResettingVotes] = useState(false);
-  const queryClient = useQueryClient();
-  
-  // Fetch ranking config if it exists
-  const { data: config } = useQuery({
-    queryKey: ['rankingConfig', categoryId],
-    queryFn: async () => await RankingsService.getConfig(categoryId)
-  });
-  
-  const form = useForm<z.infer<typeof formSchema>>({
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      siteCount: config?.site_count || 10,
-      voteRange: [config?.min_votes || 0, config?.max_votes || 100]
-    }
+      categoryId: "",
+      siteCount: "10",
+      minVotes: "0",
+      maxVotes: "100",
+    },
   });
-  
-  // Update form when config is loaded
-  React.useEffect(() => {
-    if (config) {
-      form.setValue("siteCount", config.site_count);
-      form.setValue("voteRange", [config.min_votes, config.max_votes]);
-    }
-  }, [config, form]);
-  
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsGenerating(true);
-    
+
+  const handleSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+
     try {
-      await RankingsService.regenerateRanking(
-        categoryId,
-        values.siteCount,
-        { minVotes: values.voteRange[0], maxVotes: values.voteRange[1] }
-      );
+      // Certifique-se de que minVotes e maxVotes são tratados corretamente como números
+      const minVotesNum = Number(values.minVotes);
+      const maxVotesNum = Number(values.maxVotes);
       
-      toast({
-        title: "Ranking generated",
-        description: "The new ranking has been successfully generated."
+      const votesRange: number[] = [minVotesNum, maxVotesNum];
+      
+      // Use o array tipado em vez da expressão problemática
+      console.log("Valores para geração de ranking:", {
+        categoryId: values.categoryId,
+        siteCount: Number(values.siteCount),
+        votesRange
       });
-      
-      queryClient.invalidateQueries({ queryKey: ['rankings'] });
-      onSuccess();
+
+      const response = await fetch('/api/generate-ranking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category_id: values.categoryId,
+          site_count: Number(values.siteCount),
+          min_votes: Number(values.minVotes),
+          max_votes: Number(values.maxVotes),
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Ranking gerado",
+          description: "O ranking foi gerado com sucesso!",
+        });
+        onRankingGenerated();
+      } else {
+        const errorData = await response.json();
+        toast({
+          variant: "destructive",
+          title: "Erro ao gerar ranking",
+          description: errorData.message || "Ocorreu um erro ao gerar o ranking.",
+        });
+      }
     } catch (error) {
+      console.error("Erro ao gerar ranking:", error);
       toast({
         variant: "destructive",
-        title: "Generation failed",
-        description: "Failed to generate the ranking. Please try again."
+        title: "Erro ao gerar ranking",
+        description: "Ocorreu um erro ao gerar o ranking. Por favor, tente novamente.",
       });
     } finally {
-      setIsGenerating(false);
+      setIsSubmitting(false);
     }
   };
-  
-  const handleResetVotes = async () => {
-    setIsResettingVotes(true);
-    
-    try {
-      await VotingService.resetVotesForRanking(categoryId);
-      
-      toast({
-        title: "Votes reset",
-        description: "All votes for this category have been reset."
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['rankings'] });
-      onSuccess();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Reset failed",
-        description: "Failed to reset votes. Please try again."
-      });
-    } finally {
-      setIsResettingVotes(false);
-    }
-  };
-  
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="categoryId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Categoria</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="siteCount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Number of Sites</FormLabel>
+              <FormLabel>Número de Sites</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={e => field.onChange(parseInt(e.target.value) || 10)}
-                  min={3}
-                  max={20}
-                />
+                <Input type="number" {...field} disabled={isSubmitting} />
               </FormControl>
-              <FormDescription>
-                Number of betting sites to include in the ranking
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -142,47 +151,35 @@ export function GenerateRankingsForm({ categoryId, onSuccess }: GenerateRankings
         
         <FormField
           control={form.control}
-          name="voteRange"
+          name="minVotes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vote Range</FormLabel>
+              <FormLabel>Votos Mínimos</FormLabel>
               <FormControl>
-                <div className="space-y-4">
-                  <Slider
-                    value={field.value}
-                    min={0}
-                    max={1000}
-                    step={1}
-                    onValueChange={field.onChange}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Min: {field.value[0]}</span>
-                    <span>Max: {field.value[1]}</span>
-                  </div>
-                </div>
+                <Input type="number" {...field} disabled={isSubmitting} />
               </FormControl>
-              <FormDescription>
-                Set the minimum and maximum number of votes
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <div className="flex gap-4">
-          <Button type="submit" disabled={isGenerating}>
-            {isGenerating ? "Generating..." : "Generate Ranking"}
-          </Button>
-          
-          <Button 
-            type="button" 
-            variant="destructive" 
-            onClick={handleResetVotes}
-            disabled={isResettingVotes}
-          >
-            {isResettingVotes ? "Resetting..." : "Reset Votes"}
-          </Button>
-        </div>
+        <FormField
+          control={form.control}
+          name="maxVotes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Votos Máximos</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Gerando..." : "Gerar Ranking"}
+        </Button>
       </form>
     </Form>
   );

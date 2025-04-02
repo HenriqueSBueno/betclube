@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -9,37 +9,20 @@ import { SiteManagement } from "@/components/admin/site-management";
 import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
 import { useAuth } from "@/lib/auth";
-import { RankingCategory } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
-  // Buscar categorias do servidor
-  const { data: categoriesData = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ranking_categories')
-        .select('*');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAuthenticated && user?.role === "admin"
-  });
+  const { toast } = useToast();
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Converter para o formato esperado pelo componente
-  const categories = categoriesData as RankingCategory[];
-
-  // Espaço reservado para ações que precisam ser executadas quando os dados são alterados
+  // Função para forçar atualização de dados quando algo muda
   const handleDataChange = () => {
-    // No lugar de chamar loadData diretamente,
-    // invalidamos as consultas do React Query para atualizar os dados
+    console.log("Atualizando dados em AdminDashboard");
+    setRefreshKey(prevKey => prevKey + 1);
   };
 
-  if (isLoading || categoriesLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-pulse text-lg">Loading...</div>
@@ -48,6 +31,11 @@ const AdminDashboard = () => {
   }
 
   if (!isAuthenticated || user?.role !== "admin") {
+    toast({
+      title: "Acesso negado",
+      description: "Você precisa estar logado como administrador para acessar esta página.",
+      variant: "destructive"
+    });
     return <Navigate to="/" />;
   }
 
@@ -63,7 +51,7 @@ const AdminDashboard = () => {
           </p>
         </div>
         
-        <Tabs defaultValue="sites" className="space-y-6">
+        <Tabs defaultValue="categories" className="space-y-6">
           <TabsList>
             <TabsTrigger value="sites">Betting Sites</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -72,7 +60,7 @@ const AdminDashboard = () => {
           </TabsList>
           
           <TabsContent value="sites">
-            <SiteManagement categories={categories} onDataChange={handleDataChange} />
+            <SiteManagement onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="categories">
@@ -80,7 +68,7 @@ const AdminDashboard = () => {
           </TabsContent>
           
           <TabsContent value="rankings">
-            <RankingsManagement categories={categories} onDataChange={handleDataChange} />
+            <RankingsManagement onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="users">
