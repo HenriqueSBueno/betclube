@@ -18,14 +18,17 @@ export function PromoteUser() {
     setLoading(true);
     
     try {
-      // Buscar o usuário pelo email
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+      // Get user data by looking up the email directly in the profiles
+      const { data: users, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email);
       
-      if (userError || !userData?.user) {
+      if (userError || !users || users.length === 0) {
         throw new Error(userError?.message || "Usuário não encontrado");
       }
       
-      const userId = userData.user.id;
+      const userId = users[0].id;
       
       // Atualizar o perfil para admin
       const { error: updateError } = await supabase

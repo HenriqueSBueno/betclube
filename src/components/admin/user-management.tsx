@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,11 @@ interface UserProfile {
   created_at: string;
 }
 
+interface AdminUser {
+  id: string;
+  email?: string;
+}
+
 export function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,17 +33,36 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // First get all profiles from the database
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, role, created_at');
         
       if (profilesError) throw profilesError;
       
-      const { data: { users: authUsers }, error: usersError } = await supabase.auth.admin.listUsers();
+      if (!profiles) {
+        setUsers([]);
+        return;
+      }
       
-      if (usersError) throw usersError;
+      // Now get auth users via the API, this might require admin rights
+      // We'll handle potential failures gracefully
+      let authUsers: AdminUser[] = [];
+      try {
+        const { data, error } = await supabase.auth.admin.listUsers();
+        if (!error && data?.users) {
+          authUsers = data.users.map(user => ({
+            id: user.id,
+            email: user.email
+          }));
+        }
+      } catch (e) {
+        console.error("Error fetching auth users:", e);
+        // Continue with profiles only if auth users fail
+      }
       
-      const combinedUsers = profiles.map((profile) => {
+      // Combine the data, handling the case where auth users might be missing
+      const combinedUsers = profiles.map((profile): UserProfile => {
         const authUser = authUsers.find((user) => user.id === profile.id);
         return {
           id: profile.id,
