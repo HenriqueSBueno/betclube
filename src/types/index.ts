@@ -44,6 +44,9 @@ export interface RankedSite {
   votes: number;
 }
 
+// Add this explicitly for use in SiteCard component
+export type DailyRankingSite = RankedSite;
+
 export interface Vote {
   id: string;
   userId?: string;

@@ -1,9 +1,10 @@
 
 import { mockDb } from "@/lib/mockDb";
 import { User } from "@/types";
+import { AuthUser } from "@/types/auth-types";
 
 export class ShareService {
-  static generateShareLink(rankingId: string, user: User | null): string {
+  static generateShareLink(rankingId: string, user: AuthUser | null): string {
     // Generate a fake unique token for sharing
     const token = Math.random().toString(36).substring(2, 15);
     const link = `${window.location.origin}/shared/${token}`;

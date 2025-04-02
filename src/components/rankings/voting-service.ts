@@ -1,13 +1,14 @@
 
 import { mockDb } from "@/lib/mockDb";
 import { User } from "@/types";
+import { AuthUser } from "@/types/auth-types";
 
 export class VotingService {
-  static hasVotedInRanking(user: User | null, rankingId: string, votedSiteIds: Record<string, boolean>): boolean {
+  static hasVotedInRanking(user: AuthUser | null, rankingId: string, votedSiteIds: Record<string, boolean>): boolean {
     return votedSiteIds[rankingId] === true;
   }
 
-  static registerVote(user: User, rankingId: string, siteId: string): void {
+  static registerVote(user: AuthUser, rankingId: string, siteId: string): Record<string, boolean> {
     // In a real app, we'd get the actual IP address
     const mockIp = "127.0.0.1";
     
@@ -30,7 +31,7 @@ export class VotingService {
     return updatedVotes;
   }
 
-  static loadUserVotes(user: User | null): Record<string, boolean> {
+  static loadUserVotes(user: AuthUser | null): Record<string, boolean> {
     if (!user) return {};
     
     const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format

@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowUp, TrendingUp, Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { DailyRankingSite } from "@/types";
+import { RankedSite } from "@/types";
 
 interface SiteCardProps {
-  rankedSite: DailyRankingSite;
+  rankedSite: RankedSite;
   index: number;
   maxVotes: number;
   isTopThree: boolean;
