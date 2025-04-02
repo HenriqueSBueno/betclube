@@ -1,3 +1,23 @@
+-- Função para excluir rankings antigos de uma categoria
+CREATE OR REPLACE FUNCTION public.delete_rankings_by_category(
+  p_category_id UUID
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Primeiro excluir os ranked_sites associados
+  DELETE FROM public.ranked_sites
+  WHERE ranking_id IN (
+    SELECT id FROM public.daily_rankings WHERE category_id = p_category_id
+  );
+  
+  -- Depois excluir os rankings
+  DELETE FROM public.daily_rankings
+  WHERE category_id = p_category_id;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.generate_daily_ranking(
   category_id UUID,
@@ -24,6 +44,9 @@ BEGIN
   IF category_name IS NULL THEN
     RAISE EXCEPTION 'Category not found';
   END IF;
+  
+  -- Delete existing rankings for this category
+  PERFORM delete_rankings_by_category(category_id);
   
   -- Create new ranking
   INSERT INTO public.daily_rankings (
