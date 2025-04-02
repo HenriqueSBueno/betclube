@@ -1,4 +1,3 @@
-
 import { User, BettingSite, RankingCategory, DailyRanking, Vote, SharedRanking, UserRole, RankedSite } from '@/types';
 
 // Mock users
@@ -196,21 +195,21 @@ const rankingCategories: RankingCategory[] = [
 ];
 
 // Generate random ranked sites for a category
-const generateRankedSites = (categoryId: string): RankedSite[] => {
+const generateRankedSites = (categoryId: string, siteCount: number = 10, voteRange: { minVotes: number, maxVotes: number } = { minVotes: 0, maxVotes: 100 }): RankedSite[] => {
   // Filter sites by category
   const categoryName = rankingCategories.find(c => c.id === categoryId)?.name || '';
   const filteredSites = bettingSites.filter(site => site.category.includes(categoryName));
   
-  // Randomly select 10 sites (or fewer if not enough)
+  // Randomly select sites (or fewer if not enough)
   const selectedSites = [...filteredSites]
     .sort(() => 0.5 - Math.random())
-    .slice(0, Math.min(10, filteredSites.length));
+    .slice(0, Math.min(siteCount, filteredSites.length));
   
   // Create ranked sites with random votes
   return selectedSites.map(site => ({
     siteId: site.id,
     site: site,
-    votes: Math.floor(Math.random() * 100)
+    votes: Math.floor(Math.random() * (voteRange.maxVotes - voteRange.minVotes + 1)) + voteRange.minVotes
   }));
 };
 
@@ -322,7 +321,7 @@ export const mockDb = {
     findById: (id: string) => dailyRankings.find(ranking => ranking.id === id),
     findByCategory: (categoryId: string) => 
       dailyRankings.find(ranking => ranking.categoryId === categoryId),
-    regenerate: (categoryId: string) => {
+    regenerate: (categoryId: string, siteCount: number = 10, voteRange: { minVotes: number, maxVotes: number } = { minVotes: 0, maxVotes: 100 }) => {
       const index = dailyRankings.findIndex(ranking => ranking.categoryId === categoryId);
       if (index !== -1) {
         const now = new Date();
@@ -338,7 +337,7 @@ export const mockDb = {
           categoryName: category.name,
           generationDate: now,
           expiration: tomorrow,
-          sites: generateRankedSites(categoryId)
+          sites: generateRankedSites(categoryId, siteCount, voteRange)
         };
         
         dailyRankings[index] = newRanking;
