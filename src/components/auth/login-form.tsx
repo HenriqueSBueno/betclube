@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface LoginFormProps {
   onToggleForm: () => void;
@@ -15,10 +17,12 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
     
     try {
@@ -26,6 +30,8 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
       if (success && onLoginSuccess) {
         onLoginSuccess();
       }
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login");
     } finally {
       setIsLoading(false);
     }
@@ -36,17 +42,24 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
       <CardHeader>
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
-          Enter your credentials to access your account
+          Entre com suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="your@email.com"
+              placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -54,7 +67,7 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -71,12 +84,12 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
             className="w-full" 
             disabled={isLoading}
           >
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Entrando..." : "Entrar"}
           </Button>
           <div className="text-sm text-center mt-2">
-            Don't have an account?{" "}
+            Não tem uma conta?{" "}
             <Button variant="link" onClick={onToggleForm} className="p-0">
-              Sign up
+              Registre-se
             </Button>
           </div>
         </CardFooter>

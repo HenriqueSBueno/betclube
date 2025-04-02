@@ -9,13 +9,253 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      betting_sites: {
+        Row: {
+          admin_owner_id: string
+          category: string[]
+          commission: number | null
+          description: string
+          id: string
+          logo_url: string | null
+          ltv: number | null
+          name: string
+          registration_date: string
+          url: string
+        }
+        Insert: {
+          admin_owner_id: string
+          category: string[]
+          commission?: number | null
+          description: string
+          id?: string
+          logo_url?: string | null
+          ltv?: number | null
+          name: string
+          registration_date?: string
+          url: string
+        }
+        Update: {
+          admin_owner_id?: string
+          category?: string[]
+          commission?: number | null
+          description?: string
+          id?: string
+          logo_url?: string | null
+          ltv?: number | null
+          name?: string
+          registration_date?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      daily_rankings: {
+        Row: {
+          category_id: string
+          category_name: string
+          expiration: string
+          generation_date: string
+          id: string
+        }
+        Insert: {
+          category_id: string
+          category_name: string
+          expiration: string
+          generation_date?: string
+          id?: string
+        }
+        Update: {
+          category_id?: string
+          category_name?: string
+          expiration?: string
+          generation_date?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_rankings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ranking_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      ranked_sites: {
+        Row: {
+          id: string
+          position: number
+          ranking_id: string
+          site_id: string
+          votes: number
+        }
+        Insert: {
+          id?: string
+          position: number
+          ranking_id: string
+          site_id: string
+          votes?: number
+        }
+        Update: {
+          id?: string
+          position?: number
+          ranking_id?: string
+          site_id?: string
+          votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ranked_sites_ranking_id_fkey"
+            columns: ["ranking_id"]
+            isOneToOne: false
+            referencedRelation: "daily_rankings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranked_sites_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "betting_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ranking_categories: {
+        Row: {
+          admin_owner_id: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          admin_owner_id: string
+          description: string
+          id?: string
+          name: string
+        }
+        Update: {
+          admin_owner_id?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      shared_rankings: {
+        Row: {
+          expiration_date: string
+          id: string
+          ranking_id: string
+          share_date: string
+          source_user_id: string | null
+          target_user_id: string | null
+          unique_token: string
+        }
+        Insert: {
+          expiration_date: string
+          id?: string
+          ranking_id: string
+          share_date?: string
+          source_user_id?: string | null
+          target_user_id?: string | null
+          unique_token: string
+        }
+        Update: {
+          expiration_date?: string
+          id?: string
+          ranking_id?: string
+          share_date?: string
+          source_user_id?: string | null
+          target_user_id?: string | null
+          unique_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_rankings_ranking_id_fkey"
+            columns: ["ranking_id"]
+            isOneToOne: false
+            referencedRelation: "daily_rankings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          id: string
+          ip: string
+          ranking_id: string
+          site_id: string
+          user_id: string | null
+          vote_date: string
+        }
+        Insert: {
+          id?: string
+          ip: string
+          ranking_id: string
+          site_id: string
+          user_id?: string | null
+          vote_date?: string
+        }
+        Update: {
+          id?: string
+          ip?: string
+          ranking_id?: string
+          site_id?: string
+          user_id?: string | null
+          vote_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_ranking_id_fkey"
+            columns: ["ranking_id"]
+            isOneToOne: false
+            referencedRelation: "daily_rankings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "betting_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_daily_ranking: {
+        Args: {
+          category_id: string
+        }
+        Returns: string
+      }
+      generate_sharing_token: {
+        Args: {
+          ranking_id: string
+          user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

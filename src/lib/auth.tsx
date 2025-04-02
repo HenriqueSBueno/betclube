@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '@/types';
-import { mockDb } from './mockDb';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
   user: User | null;
@@ -10,66 +10,74 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-  
+
   useEffect(() => {
-    // Check for stored auth in localStorage
-    const storedUser = localStorage.getItem('bettingBuzzUser');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        localStorage.removeItem('bettingBuzzUser');
+    // Set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          toast({
+            title: 'Login realizado',
+            description: 'Você foi conectado com sucesso',
+          });
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          toast({
+            title: 'Desconectado',
+            description: 'Você foi desconectado com sucesso',
+          });
+        }
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    // In a real app, we'd validate the password
-    // Here we just check if the user exists and set as logged in
     try {
-      const foundUser = mockDb.users.findByEmail(email);
-      
-      if (foundUser) {
-        // For demo purposes, we're accepting any password
-        const updatedUser = mockDb.users.update(foundUser.id, { 
-          lastLogin: new Date() 
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao fazer login',
+          description: error.message,
         });
-        
-        if (updatedUser) {
-          setUser(updatedUser);
-          localStorage.setItem('bettingBuzzUser', JSON.stringify(updatedUser));
-          toast({
-            title: 'Login successful',
-            description: `Welcome back, ${email}!`,
-          });
-          return true;
-        }
+        return false;
       }
       
+      return true;
+    } catch (error: any) {
+      console.error('Erro no login:', error);
       toast({
         variant: 'destructive',
-        title: 'Login failed',
-        description: 'Invalid email or password',
-      });
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Login error',
-        description: 'An error occurred during login',
+        title: 'Erro ao fazer login',
+        description: 'Ocorreu um erro durante o login',
       });
       return false;
     }
@@ -77,53 +85,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     try {
-      // Check if user already exists
-      const existingUser = mockDb.users.findByEmail(email);
-      
-      if (existingUser) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        }
+      });
+
+      if (error) {
         toast({
           variant: 'destructive',
-          title: 'Registration failed',
-          description: 'Email already in use',
+          title: 'Erro ao registrar',
+          description: error.message,
         });
         return false;
       }
-      
-      // Create new user (in a real app, we'd hash the password)
-      const newUser = mockDb.users.create({
-        email,
-        role: 'user',
-        registrationDate: new Date(),
-        lastLogin: new Date()
-      });
-      
-      setUser(newUser);
-      localStorage.setItem('bettingBuzzUser', JSON.stringify(newUser));
-      
+
       toast({
-        title: 'Registration successful',
-        description: 'Your account has been created',
+        title: 'Registro realizado',
+        description: 'Por favor, verifique seu email para confirmar o cadastro',
       });
       
       return true;
-    } catch (error) {
-      console.error('Registration error:', error);
+    } catch (error: any) {
+      console.error('Erro no registro:', error);
       toast({
         variant: 'destructive',
-        title: 'Registration error',
-        description: 'An error occurred during registration',
+        title: 'Erro ao registrar',
+        description: 'Ocorreu um erro durante o registro',
       });
       return false;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('bettingBuzzUser');
-    toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out',
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao desconectar:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao desconectar',
+        description: 'Ocorreu um erro ao desconectar',
+      });
+    }
   };
 
   const value = {
@@ -141,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
