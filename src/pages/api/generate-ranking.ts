@@ -1,18 +1,30 @@
 
-import { NextApiRequest, NextApiResponse } from 'next';
+// This is a simple API endpoint for generating rankings
+// We're not using Next.js so we need to adapt this file
 import { supabase } from "@/integrations/supabase/client";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed. Use POST.' });
-  }
+// Define types for request and response
+interface RequestBody {
+  category_id: string;
+  site_count?: number;
+  min_votes?: number;
+  max_votes?: number;
+}
 
-  const { category_id, site_count = 10, min_votes = 0, max_votes = 100 } = req.body;
+interface ResponseData {
+  message?: string;
+  error?: any;
+  data?: any;
+}
 
+// Create a function that would normally be a Next.js API handler
+export async function generateRanking(requestBody: RequestBody): Promise<ResponseData> {
   try {
-    if (!category_id) {
-      return res.status(400).json({ message: 'Category ID is required' });
+    if (!requestBody.category_id) {
+      return { message: 'Category ID is required' };
     }
+
+    const { category_id, site_count = 10, min_votes = 0, max_votes = 100 } = requestBody;
 
     // Use the Supabase edge function
     const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
@@ -26,13 +38,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Error invoking edge function:', error);
-      return res.status(500).json({ message: 'Failed to generate ranking', error });
+      return { message: 'Failed to generate ranking', error };
     }
 
     // Return the ranking ID
-    return res.status(200).json(data);
+    return { data };
   } catch (error) {
     console.error('Exception in generate-ranking API route:', error);
-    return res.status(500).json({ message: 'Internal server error', error: error.message });
+    return { message: 'Internal server error', error: (error as Error).message };
   }
 }
+
+// Export default for consistency, even though we're not using Next.js
+export default generateRanking;
