@@ -22,6 +22,7 @@ export function RankingList({ ranking }: RankingListProps) {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [votedSiteIds, setVotedSiteIds] = useState<Record<string, boolean>>({});
+  const [remainingVotes, setRemainingVotes] = useState(0);
 
   // Sort sites by votes in descending order
   const sortedSites = [...ranking.sites].sort((a, b) => b.votes - a.votes);
@@ -29,16 +30,21 @@ export function RankingList({ ranking }: RankingListProps) {
   // Calculate max votes for the progress bar
   const maxVotes = sortedSites[0]?.votes || 1;
 
-  // Load voted site IDs from localStorage when component mounts or ranking changes
+  // Load voted site IDs from localStorage and calculate remaining votes
   useEffect(() => {
     if (user) {
       const userVotes = VotingService.loadUserVotes(user);
       setVotedSiteIds(userVotes);
+      
+      // Calculate remaining votes for this ranking
+      const remaining = VotingService.getRemainingVotes(user, ranking.id);
+      setRemainingVotes(remaining);
     }
   }, [user, ranking.id]);
 
   const hasVotedForSite = (siteId: string) => {
-    return VotingService.hasVotedForSite(user, siteId, votedSiteIds);
+    const voteKey = VotingService.getSiteVoteKey(siteId, ranking.id);
+    return votedSiteIds[voteKey] === true;
   };
 
   const handleVote = async (siteId: string) => {
@@ -57,13 +63,24 @@ export function RankingList({ ranking }: RankingListProps) {
     }
     
     if (user) {
-      const updatedVotes = VotingService.registerVote(user, ranking.id, siteId);
-      setVotedSiteIds(updatedVotes);
-      
-      toast({
-        title: "Voto registrado!",
-        description: "Obrigado pelo seu voto",
-      });
+      try {
+        const updatedVotes = VotingService.registerVote(user, ranking.id, siteId);
+        setVotedSiteIds(updatedVotes);
+        
+        // Update remaining votes after successful vote
+        setRemainingVotes(prev => Math.max(0, prev - 1));
+        
+        toast({
+          title: "Voto registrado!",
+          description: "Obrigado pelo seu voto",
+        });
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: error instanceof Error ? error.message : "Não foi possível registrar seu voto",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -98,6 +115,8 @@ export function RankingList({ ranking }: RankingListProps) {
               hasVotedForSite={hasVotedForSite(rankedSite.siteId)}
               onVote={handleVote}
               isAuthenticated={isAuthenticated}
+              remainingVotes={remainingVotes}
+              rankingId={ranking.id}
             />
           );
         })}
