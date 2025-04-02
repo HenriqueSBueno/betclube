@@ -6,6 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
+interface ProfileWithEmail {
+  id: string;
+  email: string;
+}
+
 export function PromoteUser() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +27,8 @@ export function PromoteUser() {
       const { data: users, error: userError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email);
+        .eq('email', email)
+        .returns<{id: string}[]>();
       
       if (userError || !users || users.length === 0) {
         throw new Error(userError?.message || "Usuário não encontrado");
