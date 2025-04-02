@@ -19,8 +19,16 @@ const DEFAULT_SITE_COUNT = 10;
 const DEFAULT_MIN_VOTES = 0;
 const DEFAULT_MAX_VOTES = 100;
 
-// Store ranking configurations
-export const rankingConfigurations: RankingConfiguration[] = [];
+// Store ranking configurations - make this a permanent object that persists between renders
+const storedConfigurations = localStorage.getItem('rankingConfigurations');
+export const rankingConfigurations: RankingConfiguration[] = storedConfigurations 
+  ? JSON.parse(storedConfigurations) 
+  : [];
+
+// Helper function to save configurations to localStorage
+const saveConfigurationsToStorage = () => {
+  localStorage.setItem('rankingConfigurations', JSON.stringify(rankingConfigurations));
+};
 
 export const rankingService = {
   getAll: () => [...dailyRankings],
@@ -48,6 +56,7 @@ export const rankingService = {
     };
     
     rankingConfigurations.push(newConfig);
+    saveConfigurationsToStorage(); // Save to localStorage
     return newConfig;
   },
   
@@ -71,6 +80,8 @@ export const rankingService = {
     } else {
       rankingConfigurations.push(updatedConfig);
     }
+
+    saveConfigurationsToStorage(); // Save to localStorage
     
     return updatedConfig;
   },
@@ -107,6 +118,10 @@ export const rankingService = {
       };
       
       dailyRankings[index] = newRanking;
+      
+      // Store the updated rankings in localStorage to persist across refreshes
+      localStorage.setItem('dailyRankings', JSON.stringify(dailyRankings));
+      
       return newRanking;
     }
     return null;
@@ -140,19 +155,35 @@ export const rankingService = {
       }
     }
     
+    // Store the updated rankings in localStorage to persist across refreshes
+    localStorage.setItem('dailyRankings', JSON.stringify(dailyRankings));
+    
     return updatedRankings;
   }
 };
 
 // Create a function to generate initial daily rankings
 const generateInitialDailyRankings = () => {
+  // Try to load rankings from localStorage first
+  const storedRankings = localStorage.getItem('dailyRankings');
+  if (storedRankings) {
+    const parsedRankings = JSON.parse(storedRankings);
+    // Convert string dates back to Date objects
+    parsedRankings.forEach(ranking => {
+      ranking.generationDate = new Date(ranking.generationDate);
+      ranking.expiration = new Date(ranking.expiration);
+    });
+    return parsedRankings;
+  }
+  
+  // If no stored rankings, generate new ones
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   return rankingCategories.map(category => {
     // Create default configuration for each category
-    rankingService.getConfiguration(category.id);
+    const config = rankingService.getConfiguration(category.id);
     
     return {
       id: category.id,
@@ -160,7 +191,7 @@ const generateInitialDailyRankings = () => {
       categoryName: category.name,
       generationDate: now,
       expiration: tomorrow,
-      sites: generateRankedSites(category.id, DEFAULT_SITE_COUNT, { minVotes: DEFAULT_MIN_VOTES, maxVotes: DEFAULT_MAX_VOTES })
+      sites: generateRankedSites(category.id, config.siteCount, config.voteRange)
     };
   });
 };
@@ -169,4 +200,7 @@ const generateInitialDailyRankings = () => {
 if (dailyRankings.length === 0) {
   const initialRankings = generateInitialDailyRankings();
   initialRankings.forEach(ranking => dailyRankings.push(ranking));
+  
+  // Store the initial rankings in localStorage
+  localStorage.setItem('dailyRankings', JSON.stringify(dailyRankings));
 }

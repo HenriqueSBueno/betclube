@@ -22,5 +22,5 @@ export const generateRankedSites = (
     siteId: site.id,
     site: site,
     votes: Math.floor(Math.random() * (voteRange.maxVotes - voteRange.minVotes + 1)) + voteRange.minVotes
-  }));
+  })).sort((a, b) => b.votes - a.votes); // Sort by votes in descending order
 };
