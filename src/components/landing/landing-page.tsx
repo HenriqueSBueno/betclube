@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -27,6 +28,15 @@ export function LandingPage() {
                 onClick={() => setIsAuthModalOpen(true)}
               >
                 Get Started
+              </Button>
+              <Button 
+                size="lg"
+                variant="outline"
+                asChild
+              >
+                <Link to="/home">
+                  View Rankings
+                </Link>
               </Button>
             </div>
           </div>

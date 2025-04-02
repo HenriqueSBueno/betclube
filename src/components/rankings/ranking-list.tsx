@@ -144,7 +144,8 @@ export function RankingList({ ranking }: RankingListProps) {
                     size="sm"
                     className={`vote-button ${hasVotedInRanking(ranking.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
                     onClick={() => handleVote(rankedSite.siteId)}
-                    disabled={hasVotedInRanking(ranking.id)}
+                    disabled={!isAuthenticated || hasVotedInRanking(ranking.id)}
+                    title={!isAuthenticated ? "Faça login para votar" : hasVotedInRanking(ranking.id) ? "Você já votou nesta lista hoje" : "Votar neste site"}
                   >
                     <ArrowUp className="h-4 w-4 mr-1" />
                     Votar

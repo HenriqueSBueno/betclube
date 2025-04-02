@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 
 import Index from "./pages/Index";
+import Home from "./pages/Home";
 import AdminDashboard from "./pages/AdminDashboard";
 import SharedRanking from "./pages/SharedRanking";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/shared/:token" element={<SharedRanking />} />
               <Route path="*" element={<NotFound />} />
