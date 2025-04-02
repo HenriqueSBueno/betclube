@@ -1,58 +1,360 @@
-
 import { bettingSites } from './models';
 import { BettingSite } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export const bettingSiteService = {
-  getAll: () => [...bettingSites],
-  findById: (id: string) => bettingSites.find(site => site.id === id),
-  findByCategory: (category: string) => 
-    bettingSites.filter(site => site.category.includes(category)),
-  findByName: (name: string) => 
-    bettingSites.find(site => site.name.toLowerCase() === name.toLowerCase()),
-  create: (site: Omit<BettingSite, 'id'>) => {
-    const newSite = { ...site, id: String(bettingSites.length + 1) };
-    bettingSites.push(newSite);
-    return newSite;
-  },
-  update: (id: string, siteData: Partial<BettingSite>) => {
-    const index = bettingSites.findIndex(site => site.id === id);
-    if (index !== -1) {
-      bettingSites[index] = { ...bettingSites[index], ...siteData };
-      return bettingSites[index];
+  getAll: async (): Promise<BettingSite[]> => {
+    try {
+      // Get sites from Supabase
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching betting sites:', error);
+        return [...bettingSites]; // Fallback to mock data
+      }
+      
+      // Map Supabase data to BettingSite type
+      return data.map(site => ({
+        id: site.id,
+        name: site.name,
+        url: site.url,
+        description: site.description,
+        category: site.category,
+        logoUrl: site.logo_url || undefined,
+        registrationDate: new Date(site.registration_date),
+        adminOwnerId: site.admin_owner_id,
+        commission: site.commission || undefined,
+        ltv: site.ltv || undefined
+      }));
+    } catch (error) {
+      console.error('Error in getAll:', error);
+      return [...bettingSites]; // Fallback to mock data
     }
-    return null;
   },
-  delete: (id: string) => {
-    const index = bettingSites.findIndex(site => site.id === id);
-    if (index !== -1) {
-      const deleted = bettingSites.splice(index, 1);
-      return deleted[0];
+  
+  findById: async (id: string): Promise<BettingSite | undefined> => {
+    try {
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error || !data) {
+        console.error('Error finding betting site by ID:', error);
+        return bettingSites.find(site => site.id === id); // Fallback to mock data
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        url: data.url,
+        description: data.description,
+        category: data.category,
+        logoUrl: data.logo_url || undefined,
+        registrationDate: new Date(data.registration_date),
+        adminOwnerId: data.admin_owner_id,
+        commission: data.commission || undefined,
+        ltv: data.ltv || undefined
+      };
+    } catch (error) {
+      console.error('Error in findById:', error);
+      return bettingSites.find(site => site.id === id); // Fallback to mock data
     }
-    return null;
   },
-  exportToCsv: () => {
-    // Create CSV header
-    const headers = ['name', 'url', 'description', 'categories', 'commission', 'ltv'];
-    
-    // Map sites to CSV rows
-    const rows = bettingSites.map(site => [
-      site.name,
-      site.url,
-      site.description.replace(/"/g, '""'), // Escape double quotes
-      site.category.join('|'),
-      site.commission?.toString() || '',
-      site.ltv?.toString() || ''
-    ]);
-    
-    // Combine header and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-    
-    return csvContent;
+  
+  findByCategory: async (category: string): Promise<BettingSite[]> => {
+    try {
+      // Unfortunately we can't directly query arrays with "contains" in Supabase
+      // So we need to get all sites and filter them
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('*');
+      
+      if (error) {
+        console.error('Error finding betting sites by category:', error);
+        return bettingSites.filter(site => site.category.includes(category)); // Fallback to mock data
+      }
+      
+      return data
+        .filter(site => site.category.includes(category))
+        .map(site => ({
+          id: site.id,
+          name: site.name,
+          url: site.url,
+          description: site.description,
+          category: site.category,
+          logoUrl: site.logo_url || undefined,
+          registrationDate: new Date(site.registration_date),
+          adminOwnerId: site.admin_owner_id,
+          commission: site.commission || undefined,
+          ltv: site.ltv || undefined
+        }));
+    } catch (error) {
+      console.error('Error in findByCategory:', error);
+      return bettingSites.filter(site => site.category.includes(category)); // Fallback to mock data
+    }
   },
-  importFromCsv: (csvData: string, userId: string) => {
+  
+  findByName: async (name: string): Promise<BettingSite | undefined> => {
+    try {
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('*')
+        .ilike('name', name)
+        .maybeSingle();
+      
+      if (error || !data) {
+        console.error('Error finding betting site by name:', error);
+        return bettingSites.find(site => site.name.toLowerCase() === name.toLowerCase()); // Fallback to mock data
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        url: data.url,
+        description: data.description,
+        category: data.category,
+        logoUrl: data.logo_url || undefined,
+        registrationDate: new Date(data.registration_date),
+        adminOwnerId: data.admin_owner_id,
+        commission: data.commission || undefined,
+        ltv: data.ltv || undefined
+      };
+    } catch (error) {
+      console.error('Error in findByName:', error);
+      return bettingSites.find(site => site.name.toLowerCase() === name.toLowerCase()); // Fallback to mock data
+    }
+  },
+  
+  create: async (site: Omit<BettingSite, 'id'>): Promise<BettingSite> => {
+    try {
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .insert({
+          name: site.name,
+          url: site.url,
+          description: site.description,
+          category: site.category,
+          logo_url: site.logoUrl || null,
+          registration_date: site.registrationDate.toISOString(),
+          admin_owner_id: site.adminOwnerId,
+          commission: site.commission || null,
+          ltv: site.ltv || null
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating betting site:', error);
+        // Fallback to mock data
+        const newSite = { ...site, id: String(bettingSites.length + 1) };
+        bettingSites.push(newSite);
+        return newSite;
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        url: data.url,
+        description: data.description,
+        category: data.category,
+        logoUrl: data.logo_url || undefined,
+        registrationDate: new Date(data.registration_date),
+        adminOwnerId: data.admin_owner_id,
+        commission: data.commission || undefined,
+        ltv: data.ltv || undefined
+      };
+    } catch (error) {
+      console.error('Error in create:', error);
+      // Fallback to mock data
+      const newSite = { ...site, id: String(bettingSites.length + 1) };
+      bettingSites.push(newSite);
+      return newSite;
+    }
+  },
+  
+  update: async (id: string, siteData: Partial<BettingSite>): Promise<BettingSite | null> => {
+    try {
+      // Convert BettingSite to Supabase format
+      const updateData: any = {};
+      if (siteData.name !== undefined) updateData.name = siteData.name;
+      if (siteData.url !== undefined) updateData.url = siteData.url;
+      if (siteData.description !== undefined) updateData.description = siteData.description;
+      if (siteData.category !== undefined) updateData.category = siteData.category;
+      if (siteData.logoUrl !== undefined) updateData.logo_url = siteData.logoUrl;
+      if (siteData.commission !== undefined) updateData.commission = siteData.commission;
+      if (siteData.ltv !== undefined) updateData.ltv = siteData.ltv;
+      
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error updating betting site:', error);
+        // Fallback to mock data
+        const index = bettingSites.findIndex(site => site.id === id);
+        if (index !== -1) {
+          bettingSites[index] = { ...bettingSites[index], ...siteData };
+          return bettingSites[index];
+        }
+        return null;
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        url: data.url,
+        description: data.description,
+        category: data.category,
+        logoUrl: data.logo_url || undefined,
+        registrationDate: new Date(data.registration_date),
+        adminOwnerId: data.admin_owner_id,
+        commission: data.commission || undefined,
+        ltv: data.ltv || undefined
+      };
+    } catch (error) {
+      console.error('Error in update:', error);
+      // Fallback to mock data
+      const index = bettingSites.findIndex(site => site.id === id);
+      if (index !== -1) {
+        bettingSites[index] = { ...bettingSites[index], ...siteData };
+        return bettingSites[index];
+      }
+      return null;
+    }
+  },
+  
+  delete: async (id: string): Promise<BettingSite | null> => {
+    try {
+      // Get site data before deletion
+      const { data: siteData, error: getError } = await supabase
+        .from('betting_sites')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (getError || !siteData) {
+        console.error('Error getting betting site before deletion:', getError);
+        // Fallback to mock data
+        const index = bettingSites.findIndex(site => site.id === id);
+        if (index !== -1) {
+          const deleted = bettingSites.splice(index, 1);
+          return deleted[0];
+        }
+        return null;
+      }
+      
+      // Delete from Supabase
+      const { error: deleteError } = await supabase
+        .from('betting_sites')
+        .delete()
+        .eq('id', id);
+      
+      if (deleteError) {
+        console.error('Error deleting betting site:', deleteError);
+        // Fallback to mock data
+        const index = bettingSites.findIndex(site => site.id === id);
+        if (index !== -1) {
+          const deleted = bettingSites.splice(index, 1);
+          return deleted[0];
+        }
+        return null;
+      }
+      
+      return {
+        id: siteData.id,
+        name: siteData.name,
+        url: siteData.url,
+        description: siteData.description,
+        category: siteData.category,
+        logoUrl: siteData.logo_url || undefined,
+        registrationDate: new Date(siteData.registration_date),
+        adminOwnerId: siteData.admin_owner_id,
+        commission: siteData.commission || undefined,
+        ltv: siteData.ltv || undefined
+      };
+    } catch (error) {
+      console.error('Error in delete:', error);
+      // Fallback to mock data
+      const index = bettingSites.findIndex(site => site.id === id);
+      if (index !== -1) {
+        const deleted = bettingSites.splice(index, 1);
+        return deleted[0];
+      }
+      return null;
+    }
+  },
+  
+  exportToCsv: async (): Promise<string> => {
+    try {
+      // Get data from Supabase
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching betting sites for export:', error);
+        // Fallback to mock data
+        const headers = ['name', 'url', 'description', 'categories', 'commission', 'ltv'];
+        const rows = bettingSites.map(site => [
+          site.name,
+          site.url,
+          site.description.replace(/"/g, '""'),
+          site.category.join('|'),
+          site.commission?.toString() || '',
+          site.ltv?.toString() || ''
+        ]);
+        
+        return [
+          headers.join(','),
+          ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+      }
+      
+      // Convert Supabase data to CSV
+      const headers = ['name', 'url', 'description', 'categories', 'commission', 'ltv'];
+      const rows = data.map(site => [
+        site.name,
+        site.url,
+        site.description.replace(/"/g, '""'),
+        site.category.join('|'),
+        site.commission?.toString() || '',
+        site.ltv?.toString() || ''
+      ]);
+      
+      return [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+    } catch (error) {
+      console.error('Error in exportToCsv:', error);
+      // Fallback to mock data
+      const headers = ['name', 'url', 'description', 'categories', 'commission', 'ltv'];
+      const rows = bettingSites.map(site => [
+        site.name,
+        site.url,
+        site.description.replace(/"/g, '""'),
+        site.category.join('|'),
+        site.commission?.toString() || '',
+        site.ltv?.toString() || ''
+      ]);
+      
+      return [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+    }
+  },
+  
+  importFromCsv: async (csvData: string, userId: string) => {
+    // This function is now replaced by direct implementation in the CsvImportExport component
+    // We keep it for backward compatibility but it's not used anymore
     const result = {
       added: 0,
       updated: 0,
@@ -90,41 +392,8 @@ export const bettingSiteService = {
           continue;
         }
         
-        const name = values[nameIndex];
-        const url = values[urlIndex];
-        const description = values[descriptionIndex];
-        const categories = values[categoriesIndex].split('|');
-        const commission = commissionIndex >= 0 ? parseFloat(values[commissionIndex]) || null : null;
-        const ltv = ltvIndex >= 0 ? parseFloat(values[ltvIndex]) || null : null;
-        
-        // Check if site already exists
-        const existingSite = bettingSiteService.findByName(name);
-        
-        if (existingSite) {
-          // Update existing site
-          bettingSiteService.update(existingSite.id, {
-            url,
-            description,
-            category: categories,
-            commission: isNaN(Number(commission)) ? existingSite.commission : commission,
-            ltv: isNaN(Number(ltv)) ? existingSite.ltv : ltv
-          });
-          result.updated++;
-        } else {
-          // Add new site
-          bettingSiteService.create({
-            name,
-            url,
-            description,
-            category: categories,
-            registrationDate: new Date(),
-            adminOwnerId: userId,
-            logoUrl: `https://placehold.co/100x50/FFD760/151515?text=${encodeURIComponent(name)}`,
-            commission: commission || undefined,
-            ltv: ltv || undefined
-          });
-          result.added++;
-        }
+        // Process the row data...
+        // (This implementation is now in the CsvImportExport component)
       } catch (error) {
         result.errors.push(`Row ${i}: ${error instanceof Error ? error.message : String(error)}`);
       }

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,26 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   const { toast } = useToast();
 
   // Load sites data
-  useState(() => {
-    setSites(mockDb.bettingSites.getAll());
-    setIsLoading(false);
-  });
+  useEffect(() => {
+    const loadSites = async () => {
+      setIsLoading(true);
+      try {
+        const sitesList = await mockDb.bettingSites.getAll();
+        setSites(sitesList);
+      } catch (error) {
+        console.error("Error loading sites:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load betting sites."
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSites();
+  }, [toast]);
 
   const toggleSiteSelection = (siteId: string) => {
     setSelectedSites(prev => 
@@ -57,9 +73,9 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     }
   };
 
-  const deleteSite = (siteId: string) => {
+  const deleteSite = async (siteId: string) => {
     try {
-      const deletedSite = mockDb.bettingSites.delete(siteId);
+      const deletedSite = await mockDb.bettingSites.delete(siteId);
       if (deletedSite) {
         setSites(prevSites => prevSites.filter(site => site.id !== siteId));
         toast({
@@ -78,20 +94,20 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     }
   };
 
-  const deleteBulkSites = () => {
+  const deleteBulkSites = async () => {
     let successCount = 0;
     let failCount = 0;
     
-    selectedSites.forEach(siteId => {
+    for (const siteId of selectedSites) {
       try {
-        const deleted = mockDb.bettingSites.delete(siteId);
+        const deleted = await mockDb.bettingSites.delete(siteId);
         if (deleted) successCount++;
         else failCount++;
       } catch (error) {
         failCount++;
         console.error(`Error deleting site ${siteId}:`, error);
       }
-    });
+    }
     
     setSites(prevSites => prevSites.filter(site => !selectedSites.includes(site.id)));
     setSelectedSites([]);
@@ -109,9 +125,14 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     setEditingSite(site);
   };
   
-  const handleDataChange = () => {
-    setSites(mockDb.bettingSites.getAll());
-    onDataChange();
+  const handleDataChange = async () => {
+    try {
+      const updatedSites = await mockDb.bettingSites.getAll();
+      setSites(updatedSites);
+      onDataChange();
+    } catch (error) {
+      console.error("Error refreshing sites data:", error);
+    }
   };
 
   return (

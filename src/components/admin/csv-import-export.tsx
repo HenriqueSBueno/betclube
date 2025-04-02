@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, Upload, AlertCircle } from "lucide-react";
 import { mockDb } from "@/lib/mockDb";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CsvImportExportProps {
   onDataChange: () => void;
@@ -20,9 +21,33 @@ export function CsvImportExport({ onDataChange }: CsvImportExportProps) {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleExportCsv = () => {
+  const handleExportCsv = async () => {
     try {
-      const csvContent = mockDb.bettingSites.exportToCsv();
+      // Get data from Supabase instead of mockDb
+      const { data: sites, error } = await supabase
+        .from('betting_sites')
+        .select('*');
+      
+      if (error) throw error;
+      
+      // Create CSV header
+      const headers = ['name', 'url', 'description', 'categories', 'commission', 'ltv'];
+      
+      // Map sites to CSV rows
+      const rows = sites.map(site => [
+        site.name,
+        site.url,
+        site.description.replace(/"/g, '""'), // Escape double quotes
+        site.category.join('|'),
+        site.commission?.toString() || '',
+        site.ltv?.toString() || ''
+      ]);
+      
+      // Combine header and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
       
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -59,16 +84,106 @@ export function CsvImportExport({ onDataChange }: CsvImportExportProps) {
 
     try {
       const text = await file.text();
-      const result = mockDb.bettingSites.importFromCsv(text, user.id);
       
-      if (result.errors.length > 0) {
-        setImportErrors(result.errors);
+      // Process CSV rows
+      const rows = text.split('\n');
+      const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      
+      // Validate headers
+      const requiredHeaders = ['name', 'url', 'description', 'categories'];
+      const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+      
+      if (missingHeaders.length > 0) {
+        setImportErrors([`Missing required headers: ${missingHeaders.join(', ')}`]);
+        setIsImporting(false);
+        return;
       }
+      
+      let added = 0;
+      let updated = 0;
+      const errors: string[] = [];
+      
+      // Process rows
+      for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].trim()) continue; // Skip empty rows
+        
+        try {
+          const values = rows[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          
+          const nameIndex = headers.indexOf('name');
+          const urlIndex = headers.indexOf('url');
+          const descriptionIndex = headers.indexOf('description');
+          const categoriesIndex = headers.indexOf('categories');
+          const commissionIndex = headers.indexOf('commission');
+          const ltvIndex = headers.indexOf('ltv');
+          
+          if (values.length < 4) {
+            errors.push(`Row ${i}: Not enough values`);
+            continue;
+          }
+          
+          const name = values[nameIndex];
+          const url = values[urlIndex];
+          const description = values[descriptionIndex];
+          const categories = values[categoriesIndex].split('|');
+          const commission = commissionIndex >= 0 ? parseFloat(values[commissionIndex]) || null : null;
+          const ltv = ltvIndex >= 0 ? parseFloat(values[ltvIndex]) || null : null;
+          
+          // Check if site already exists in Supabase
+          const { data: existingSites, error: findError } = await supabase
+            .from('betting_sites')
+            .select('id')
+            .eq('name', name)
+            .maybeSingle();
+          
+          if (findError) throw findError;
+          
+          if (existingSites) {
+            // Update existing site in Supabase
+            const { error: updateError } = await supabase
+              .from('betting_sites')
+              .update({
+                url,
+                description,
+                category: categories,
+                commission: isNaN(Number(commission)) ? null : commission,
+                ltv: isNaN(Number(ltv)) ? null : ltv
+              })
+              .eq('id', existingSites.id);
+            
+            if (updateError) throw updateError;
+            updated++;
+          } else {
+            // Add new site to Supabase
+            const { error: insertError } = await supabase
+              .from('betting_sites')
+              .insert({
+                name,
+                url,
+                description,
+                category: categories,
+                registration_date: new Date().toISOString(),
+                admin_owner_id: user.id,
+                logo_url: `https://placehold.co/100x50/FFD760/151515?text=${encodeURIComponent(name)}`,
+                commission: commission || null,
+                ltv: ltv || null
+              });
+            
+            if (insertError) throw insertError;
+            added++;
+          }
+        } catch (error) {
+          console.error(`Row ${i} error:`, error);
+          errors.push(`Row ${i}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      setImportErrors(errors);
       
       toast({
         title: "Import complete",
-        description: `Added ${result.added} new sites, updated ${result.updated} existing sites.${
-          result.errors.length > 0 ? ` ${result.errors.length} errors occurred.` : ''
+        description: `Added ${added} new sites, updated ${updated} existing sites.${
+          errors.length > 0 ? ` ${errors.length} errors occurred.` : ''
         }`
       });
       
