@@ -18,6 +18,19 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [categories, setCategories] = useState<RankingCategory[]>([]);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Verificar permissões de acesso usando useEffect
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !isAdmin())) {
+      toast({
+        title: "Acesso negado",
+        description: "Você precisa estar logado como administrador para acessar esta página.",
+        variant: "destructive"
+      });
+      setAccessDenied(true);
+    }
+  }, [isAuthenticated, isLoading, isAdmin, toast]);
 
   // Função para forçar atualização de dados quando algo muda
   const handleDataChange = () => {
@@ -36,8 +49,10 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchCategories();
-  }, [refreshKey]);
+    if (isAuthenticated && isAdmin()) {
+      fetchCategories();
+    }
+  }, [refreshKey, isAuthenticated, isAdmin]);
 
   if (isLoading) {
     return (
@@ -47,12 +62,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!isAuthenticated || !isAdmin()) {
-    toast({
-      title: "Acesso negado",
-      description: "Você precisa estar logado como administrador para acessar esta página.",
-      variant: "destructive"
-    });
+  if (accessDenied) {
     return <Navigate to="/" />;
   }
 
