@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EmailVerificationNotice } from "./email-verification-notice";
 
 interface LoginFormProps {
   onToggleForm: () => void;
@@ -18,6 +19,7 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showVerificationNotice, setShowVerificationNotice] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,11 +33,24 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
         onLoginSuccess();
       }
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login");
+      const errorMessage = err.message || "Erro ao fazer login";
+      setError(errorMessage);
+      
+      // Se o erro for relacionado à confirmação do email, mostrar a tela de verificação
+      if (errorMessage.includes("Email não confirmado") || 
+          errorMessage.includes("Email not confirmed") ||
+          errorMessage.toLowerCase().includes("email") && 
+          errorMessage.toLowerCase().includes("confirm")) {
+        setShowVerificationNotice(true);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (showVerificationNotice) {
+    return <EmailVerificationNotice email={email} onBack={() => setShowVerificationNotice(false)} />;
+  }
 
   return (
     <Card className="w-[350px]">

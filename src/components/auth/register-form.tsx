@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EmailVerificationNotice } from "./email-verification-notice";
 
 interface RegisterFormProps {
   onToggleForm: () => void;
@@ -20,7 +21,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,13 +34,12 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
     
     setPasswordError("");
     setError(null);
-    setSuccess(null);
     setIsLoading(true);
     
     try {
       const success = await register(email, password);
       if (success) {
-        setSuccess("Conta criada! Por favor, verifique seu email para confirmar o cadastro.");
+        setRegistrationComplete(true);
         if (onRegisterSuccess) {
           onRegisterSuccess();
         }
@@ -50,6 +50,10 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
       setIsLoading(false);
     }
   };
+
+  if (registrationComplete) {
+    return <EmailVerificationNotice email={email} onBack={onToggleForm} />;
+  }
 
   return (
     <Card className="w-[350px]">
@@ -68,12 +72,6 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          {success && (
-            <Alert>
-              <AlertTitle>Sucesso</AlertTitle>
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -83,7 +81,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading || !!success}
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -94,7 +92,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={isLoading || !!success}
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -105,7 +103,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              disabled={isLoading || !!success}
+              disabled={isLoading}
             />
             {passwordError && (
               <p className="text-sm text-destructive">{passwordError}</p>
@@ -116,7 +114,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isLoading || !!success}
+            disabled={isLoading}
           >
             {isLoading ? "Registrando..." : "Registrar"}
           </Button>
