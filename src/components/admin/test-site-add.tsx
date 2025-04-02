@@ -13,11 +13,14 @@ export function TestSiteAdd() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  // Adicionando uma função para testar a conexão Supabase diretamente
+  // Corrigindo a função para testar a conexão Supabase
   const testSupabaseConnection = async () => {
     try {
       console.log("[TestSupabase] Testando conexão com Supabase...");
-      const { data, error } = await supabase.from('betting_sites').select('count(*)');
+      // Alterando a query para usar um formato compatível com PostgREST
+      const { data, error } = await supabase
+        .from('betting_sites')
+        .select('id');
       
       if (error) {
         console.error("[TestSupabase] Erro na conexão:", error);
