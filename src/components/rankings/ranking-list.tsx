@@ -70,8 +70,11 @@ export function RankingList({ ranking }: RankingListProps) {
         // Update remaining votes after successful vote
         setRemainingVotes(prev => Math.max(0, prev - 1));
         
+        // Calculate which vote number this is (total - remaining)
+        const voteNumber = VotingService.VOTES_PER_RANKING - remainingVotes + 1;
+        
         toast({
-          title: "Voto registrado!",
+          title: `Voto ${voteNumber} de ${VotingService.VOTES_PER_RANKING} registrado!`,
           description: "Obrigado pelo seu voto",
         });
       } catch (error) {
