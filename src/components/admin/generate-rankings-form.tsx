@@ -71,29 +71,32 @@ export function GenerateRankingsForm({ categories, onRankingGenerated }: Generat
         maxVotes: maxVotesNum
       });
 
-      // Call the database function directly using RPC
-      const { data, error } = await supabase.rpc('generate_daily_ranking', {
-        category_id: values.categoryId,
-        site_count: Number(values.siteCount),
-        min_votes: minVotesNum,
-        max_votes: maxVotesNum
+      // Call API endpoint for ranking generation
+      const response = await fetch('/api/generate-ranking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category_id: values.categoryId,
+          site_count: Number(values.siteCount),
+          min_votes: minVotesNum,
+          max_votes: maxVotesNum
+        }),
       });
 
-      if (error) {
-        console.error("Erro ao gerar ranking via RPC:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao gerar ranking",
-          description: error.message || "Ocorreu um erro ao gerar o ranking.",
-        });
-      } else {
-        console.log("Ranking gerado com sucesso:", data);
-        toast({
-          title: "Ranking gerado",
-          description: "O ranking foi gerado com sucesso!",
-        });
-        onRankingGenerated();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao gerar ranking');
       }
+
+      const result = await response.json();
+      console.log("Ranking gerado com sucesso:", result);
+      toast({
+        title: "Ranking gerado",
+        description: "O ranking foi gerado com sucesso!",
+      });
+      onRankingGenerated();
     } catch (error) {
       console.error("Erro ao gerar ranking:", error);
       toast({

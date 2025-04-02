@@ -41,7 +41,65 @@ export default async function handler(req, res) {
 
     console.log(`API: Generating ranking for category ${category_id} with ${site_count} sites, min votes: ${min_votes}, max votes: ${max_votes}`);
 
-    // Using direct database function instead of edge function to ensure reliability
+    // Step 1: Update or create configuration in ranking_configs
+    const configResult = await supabase.from('ranking_configs').upsert({
+      category_id,
+      site_count,
+      min_votes,
+      max_votes,
+      last_modified: new Date().toISOString(),
+    }, {
+      onConflict: 'category_id'
+    });
+
+    if (configResult.error) {
+      console.error('Error updating ranking configuration:', configResult.error);
+      return res.status(500).json({ 
+        message: 'Failed to update ranking configuration',
+        error: configResult.error.message 
+      });
+    }
+
+    // Step 2: Get existing ranking to delete
+    const { data: existingRankings } = await supabase
+      .from('daily_rankings')
+      .select('id')
+      .eq('category_id', category_id);
+
+    // Step 3: Delete related ranked_sites for existing rankings
+    if (existingRankings && existingRankings.length > 0) {
+      for (const ranking of existingRankings) {
+        // Delete ranked sites entries first (due to foreign key constraints)
+        const { error: deleteRankedSitesError } = await supabase
+          .from('ranked_sites')
+          .delete()
+          .eq('ranking_id', ranking.id);
+
+        if (deleteRankedSitesError) {
+          console.error('Error deleting existing ranked sites:', deleteRankedSitesError);
+          return res.status(500).json({ 
+            message: 'Failed to delete existing ranked sites', 
+            error: deleteRankedSitesError.message 
+          });
+        }
+      }
+
+      // Step 4: Delete existing rankings
+      const { error: deleteRankingsError } = await supabase
+        .from('daily_rankings')
+        .delete()
+        .eq('category_id', category_id);
+
+      if (deleteRankingsError) {
+        console.error('Error deleting existing rankings:', deleteRankingsError);
+        return res.status(500).json({ 
+          message: 'Failed to delete existing rankings', 
+          error: deleteRankingsError.message 
+        });
+      }
+    }
+
+    // Step 5: Generate new ranking using database function
     const { data, error } = await supabase.rpc('generate_daily_ranking', {
       category_id,
       site_count,
@@ -76,7 +134,65 @@ export async function generateRanking(requestBody: GenerateRankingRequest): Prom
       return { message: 'Category ID is required' };
     }
 
-    // Using direct database function instead of edge function to ensure reliability
+    // Step 1: Update or create configuration in ranking_configs
+    const configResult = await supabase.from('ranking_configs').upsert({
+      category_id,
+      site_count,
+      min_votes,
+      max_votes,
+      last_modified: new Date().toISOString(),
+    }, {
+      onConflict: 'category_id'
+    });
+
+    if (configResult.error) {
+      console.error('Error updating ranking configuration:', configResult.error);
+      return { 
+        message: 'Failed to update ranking configuration',
+        error: configResult.error.message 
+      };
+    }
+
+    // Step 2: Get existing ranking to delete
+    const { data: existingRankings } = await supabase
+      .from('daily_rankings')
+      .select('id')
+      .eq('category_id', category_id);
+
+    // Step 3: Delete related ranked_sites for existing rankings
+    if (existingRankings && existingRankings.length > 0) {
+      for (const ranking of existingRankings) {
+        // Delete ranked sites entries first (due to foreign key constraints)
+        const { error: deleteRankedSitesError } = await supabase
+          .from('ranked_sites')
+          .delete()
+          .eq('ranking_id', ranking.id);
+
+        if (deleteRankedSitesError) {
+          console.error('Error deleting existing ranked sites:', deleteRankedSitesError);
+          return { 
+            message: 'Failed to delete existing ranked sites', 
+            error: deleteRankedSitesError.message 
+          };
+        }
+      }
+
+      // Step 4: Delete existing rankings
+      const { error: deleteRankingsError } = await supabase
+        .from('daily_rankings')
+        .delete()
+        .eq('category_id', category_id);
+
+      if (deleteRankingsError) {
+        console.error('Error deleting existing rankings:', deleteRankingsError);
+        return { 
+          message: 'Failed to delete existing rankings', 
+          error: deleteRankingsError.message 
+        };
+      }
+    }
+
+    // Step 5: Generate new ranking using database function
     const { data, error } = await supabase.rpc('generate_daily_ranking', {
       category_id,
       site_count,

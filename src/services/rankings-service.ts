@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DailyRanking, RankedSite, BettingSite, RankingCategory, RankingConfig } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -196,30 +195,34 @@ export class RankingsService {
   // Regenerar ranking
   static async regenerateRanking(categoryId: string, siteCount: number, voteRange: { minVotes: number, maxVotes: number }) {
     try {
-      // Primeiro, atualizamos a configuração
-      await this.upsertConfig(categoryId, siteCount, voteRange.minVotes, voteRange.maxVotes);
-      
-      console.log("Calling generate_daily_ranking with parameters:", {
+      console.log("Calling API to generate ranking with parameters:", {
         category_id: categoryId,
         site_count: siteCount,
         min_votes: voteRange.minVotes,
         max_votes: voteRange.maxVotes
       });
       
-      // Usar diretamente a função do banco de dados em vez da edge function que está falhando
-      const { data, error } = await supabase.rpc('generate_daily_ranking', {
-        category_id: categoryId,
-        site_count: siteCount,
-        min_votes: voteRange.minVotes,
-        max_votes: voteRange.maxVotes
+      // Call the API endpoint for consistent behavior
+      const response = await fetch('/api/generate-ranking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category_id: categoryId,
+          site_count: siteCount,
+          min_votes: voteRange.minVotes,
+          max_votes: voteRange.maxVotes
+        }),
       });
       
-      if (error) {
-        console.error("Error from RPC call:", error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate ranking');
       }
       
-      console.log("RPC call succeeded with result:", data);
+      const result = await response.json();
+      console.log("API call succeeded with result:", result);
       
       // Retorna o ranking atualizado
       return this.getRankingByCategory(categoryId);
@@ -233,37 +236,21 @@ export class RankingsService {
   // Gerar todos os rankings diários
   static async generateDailyBatch() {
     try {
-      const { data: categories, error } = await supabase
-        .from('ranking_categories')
-        .select('id');
-        
-      if (error) throw error;
+      // Chamar a edge function para gerar todos os rankings
+      const { data, error } = await supabase.functions.invoke('generate_daily_rankings');
       
-      const results = [];
-      for (const category of categories) {
-        // Buscar configuração para esta categoria
-        const config = await this.getConfig(category.id);
-        
-        if (config) {
-          // Se configuração existe, use seus valores
-          const result = await this.regenerateRanking(
-            category.id,
-            config.site_count,
-            { minVotes: config.min_votes, maxVotes: config.max_votes }
-          );
-          results.push(result);
-        } else {
-          // Se não, use valores padrão
-          const result = await this.regenerateRanking(
-            category.id,
-            10, // site_count padrão
-            { minVotes: 0, maxVotes: 100 } // valores padrão
-          );
-          results.push(result);
-        }
+      if (error) {
+        console.error("Error calling generate_daily_rankings function:", error);
+        throw error;
       }
       
-      return results;
+      console.log("Successfully triggered daily rankings generation:", data);
+      
+      // Aguardar um momento para os rankings serem gerados no banco
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Retornar todos os rankings atualizados
+      return this.getAllRankings();
     } catch (error) {
       console.error("Erro ao gerar batch de rankings diários:", error);
       toast.error("Erro ao gerar rankings. Tente novamente mais tarde.");
