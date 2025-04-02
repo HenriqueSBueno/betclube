@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { mockDb } from "@/lib/mockDb";
 import { RankingCategory } from "@/types";
@@ -25,6 +26,9 @@ export function GenerateRankingsForm({
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [totalSites, setTotalSites] = useState("10");
+  const [minVotes, setMinVotes] = useState("0");
+  const [maxVotes, setMaxVotes] = useState("100");
 
   const handleGenerate = async () => {
     if (!selectedCategory) {
@@ -36,10 +40,37 @@ export function GenerateRankingsForm({
       return;
     }
     
+    // Parse and validate inputs
+    const sitesCount = parseInt(totalSites, 10);
+    const minVotesCount = parseInt(minVotes, 10);
+    const maxVotesCount = parseInt(maxVotes, 10);
+    
+    if (isNaN(sitesCount) || sitesCount < 1) {
+      toast({
+        variant: "destructive",
+        title: "Invalid sites count",
+        description: "Total sites must be a positive number."
+      });
+      return;
+    }
+    
+    if (isNaN(minVotesCount) || isNaN(maxVotesCount) || minVotesCount < 0 || maxVotesCount < minVotesCount) {
+      toast({
+        variant: "destructive",
+        title: "Invalid votes range",
+        description: "Min votes must be non-negative and max votes must be greater than or equal to min votes."
+      });
+      return;
+    }
+    
     setIsGenerating(true);
     
     try {
-      const newRanking = mockDb.dailyRankings.regenerate(selectedCategory);
+      const newRanking = mockDb.dailyRankings.regenerate(
+        selectedCategory, 
+        sitesCount, 
+        { minVotes: minVotesCount, maxVotes: maxVotesCount }
+      );
       
       if (newRanking) {
         toast({
@@ -82,6 +113,57 @@ export function GenerateRankingsForm({
             ))}
           </SelectContent>
         </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="totalSites" className="text-sm font-medium">
+          Total Sites
+        </label>
+        <Input
+          id="totalSites"
+          type="number"
+          min="1"
+          value={totalSites}
+          onChange={(e) => setTotalSites(e.target.value)}
+          placeholder="Number of sites to include"
+          disabled={isGenerating}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">
+          Random Votes Range
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label htmlFor="minVotes" className="text-xs text-muted-foreground">
+              Minimum
+            </label>
+            <Input
+              id="minVotes"
+              type="number"
+              min="0"
+              value={minVotes}
+              onChange={(e) => setMinVotes(e.target.value)}
+              placeholder="Minimum votes"
+              disabled={isGenerating}
+            />
+          </div>
+          <div>
+            <label htmlFor="maxVotes" className="text-xs text-muted-foreground">
+              Maximum
+            </label>
+            <Input
+              id="maxVotes" 
+              type="number"
+              min="0"
+              value={maxVotes}
+              onChange={(e) => setMaxVotes(e.target.value)}
+              placeholder="Maximum votes"
+              disabled={isGenerating}
+            />
+          </div>
+        </div>
       </div>
       
       <Button 
