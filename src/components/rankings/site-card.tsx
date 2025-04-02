@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ interface SiteCardProps {
   index: number;
   maxVotes: number;
   isTopThree: boolean;
-  hasVotedInRanking: boolean;
+  hasVotedForSite: boolean;
   onVote: (siteId: string) => void;
   isAuthenticated: boolean;
 }
@@ -22,7 +21,7 @@ export function SiteCard({
   index,
   maxVotes,
   isTopThree,
-  hasVotedInRanking,
+  hasVotedForSite,
   onVote,
   isAuthenticated,
 }: SiteCardProps) {
@@ -39,10 +38,10 @@ export function SiteCard({
             </div>
             <Button
               size="sm"
-              className={`vote-button ${hasVotedInRanking ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
               onClick={() => onVote(rankedSite.siteId)}
-              disabled={!isAuthenticated || hasVotedInRanking}
-              title={!isAuthenticated ? "Faça login para votar" : hasVotedInRanking ? "Você já votou nesta lista hoje" : "Votar neste site"}
+              disabled={!isAuthenticated || hasVotedForSite}
+              title={!isAuthenticated ? "Faça login para votar" : hasVotedForSite ? "Você já votou neste site hoje" : "Votar neste site"}
             >
               <ArrowUp className="h-4 w-4 mr-1" />
               Votar

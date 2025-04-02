@@ -1,11 +1,11 @@
 
 import { mockDb } from "@/lib/mockDb";
-import { User } from "@/types";
 import { AuthUser } from "@/types/auth-types";
 
 export class VotingService {
-  static hasVotedInRanking(user: AuthUser | null, rankingId: string, votedSiteIds: Record<string, boolean>): boolean {
-    return votedSiteIds[rankingId] === true;
+  static hasVotedForSite(user: AuthUser | null, siteId: string, votedSiteIds: Record<string, boolean>): boolean {
+    if (!user) return false;
+    return votedSiteIds[siteId] === true;
   }
 
   static registerVote(user: AuthUser, rankingId: string, siteId: string): Record<string, boolean> {
@@ -20,12 +20,12 @@ export class VotingService {
       ip: mockIp,
     });
     
-    // Save the vote to localStorage
+    // Save the vote to localStorage - now tracking by siteId instead of rankingId
     const today = new Date().toISOString().split('T')[0];
     const storedVotes = localStorage.getItem(`userVotes_${user.id}_${today}`);
     const votedSiteIds = storedVotes ? JSON.parse(storedVotes) : {};
     
-    const updatedVotes = { ...votedSiteIds, [rankingId]: true };
+    const updatedVotes = { ...votedSiteIds, [siteId]: true };
     localStorage.setItem(`userVotes_${user.id}_${today}`, JSON.stringify(updatedVotes));
     
     return updatedVotes;

@@ -37,8 +37,8 @@ export function RankingList({ ranking }: RankingListProps) {
     }
   }, [user, ranking.id]);
 
-  const hasVotedInRanking = () => {
-    return VotingService.hasVotedInRanking(user, ranking.id, votedSiteIds);
+  const hasVotedForSite = (siteId: string) => {
+    return VotingService.hasVotedForSite(user, siteId, votedSiteIds);
   };
 
   const handleVote = async (siteId: string) => {
@@ -47,10 +47,10 @@ export function RankingList({ ranking }: RankingListProps) {
       return;
     }
     
-    if (hasVotedInRanking()) {
+    if (hasVotedForSite(siteId)) {
       toast({
         title: "Já votou",
-        description: "Você já votou nesta lista hoje",
+        description: "Você já votou neste site hoje",
         variant: "destructive",
       });
       return;
@@ -95,7 +95,7 @@ export function RankingList({ ranking }: RankingListProps) {
               index={index}
               maxVotes={maxVotes}
               isTopThree={isTopThree}
-              hasVotedInRanking={hasVotedInRanking()}
+              hasVotedForSite={hasVotedForSite(rankedSite.siteId)}
               onVote={handleVote}
               isAuthenticated={isAuthenticated}
             />
