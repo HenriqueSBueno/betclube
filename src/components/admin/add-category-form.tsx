@@ -43,11 +43,19 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication error",
+        description: "You must be logged in to add categories."
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
+      // Garantir que o admin_owner_id seja fornecido corretamente
       const newCategory = await CategoryService.create({
         name: values.name,
         description: values.description,
@@ -70,7 +78,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
       toast({
         variant: "destructive",
         title: "Failed to add category",
-        description: "An error occurred while adding the category."
+        description: "An error occurred while adding the category. Please try again."
       });
     } finally {
       setIsSubmitting(false);

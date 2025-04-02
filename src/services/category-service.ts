@@ -50,6 +50,7 @@ export class CategoryService {
    */
   static async create(category: Omit<RankingCategory, "id">): Promise<RankingCategory | null> {
     try {
+      // Remover qualquer verificação de usuário aqui, confiar nos dados do frontend
       const { data, error } = await supabase
         .from("ranking_categories")
         .insert(category)
@@ -57,6 +58,7 @@ export class CategoryService {
         .single();
 
       if (error) {
+        console.error("Error creating category:", error);
         throw error;
       }
 
