@@ -1,6 +1,4 @@
 
-// Import this file from the project and adapt it to fix the error with `useQuery` and the `onSettled` option
-// We need to replace `onSettled` with the correct React Query structure
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -10,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { RankingConfig } from "@/types";
 import { RankingsService } from "@/services/rankings-service";
 import { VotingService } from "@/services/voting-service";
@@ -32,45 +30,31 @@ export function GenerateRankingsForm({ categoryId, onSuccess }: GenerateRankings
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
   const [config, setConfig] = useState<RankingConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch existing config for this category
-  useEffect(() => {
-    async function fetchConfig() {
-      setIsLoading(true);
-      try {
-        const configData = await RankingsService.getConfig(categoryId);
-        setConfig(configData);
-      } catch (error) {
-        console.error("Error fetching ranking config:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch ranking configuration."
-        });
-      } finally {
-        setIsLoading(false);
+  
+  // Use React Query to fetch the config
+  const { data: configData, isLoading } = useQuery({
+    queryKey: ['rankingConfig', categoryId],
+    queryFn: async () => {
+      return await RankingsService.getConfig(categoryId);
+    },
+    onSuccess: (data) => {
+      setConfig(data);
+      if (data) {
+        form.setValue("siteCount", data.site_count);
+        form.setValue("voteRange", [data.min_votes, data.max_votes]);
       }
     }
-
-    fetchConfig();
-  }, [categoryId, toast]);
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      siteCount: config?.site_count || 10,
-      voteRange: [config?.min_votes || 0, config?.max_votes || 100],
+      siteCount: 10,
+      voteRange: [0, 100],
     },
   });
 
-  // Update form values when config is loaded
-  useEffect(() => {
-    if (config) {
-      form.setValue("siteCount", config.site_count);
-      form.setValue("voteRange", [config.min_votes, config.max_votes]);
-    }
-  }, [config, form]);
+  // No need for useEffect to update form values as we're doing it in the query's onSuccess callback
 
   const onSubmit = async (values: FormValues) => {
     setIsGenerating(true);
@@ -84,6 +68,9 @@ export function GenerateRankingsForm({ categoryId, onSuccess }: GenerateRankings
           maxVotes: values.voteRange[1] 
         }
       );
+      
+      // Reset votes for this ranking if needed
+      await VotingService.resetVotesForRanking(categoryId);
       
       toast({
         title: "Ranking Generated",
