@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Select,
@@ -14,6 +14,7 @@ import { mockDb } from "@/lib/mockDb";
 import { RankingCategory } from "@/types";
 import { ArrowDown } from "lucide-react";
 import { VotingService } from "@/components/rankings/voting-service";
+import { RankingConfiguration } from "@/lib/mockDb/ranking-service";
 
 interface GenerateRankingsFormProps {
   categories: RankingCategory[];
@@ -30,6 +31,18 @@ export function GenerateRankingsForm({
   const [totalSites, setTotalSites] = useState("10");
   const [minVotes, setMinVotes] = useState("0");
   const [maxVotes, setMaxVotes] = useState("100");
+  const [currentConfig, setCurrentConfig] = useState<RankingConfiguration | null>(null);
+
+  // Load configuration when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      const config = mockDb.dailyRankings.getConfiguration(selectedCategory);
+      setCurrentConfig(config);
+      setTotalSites(config.siteCount.toString());
+      setMinVotes(config.voteRange.minVotes.toString());
+      setMaxVotes(config.voteRange.maxVotes.toString());
+    }
+  }, [selectedCategory]);
 
   const handleGenerate = async () => {
     if (!selectedCategory) {
@@ -83,7 +96,7 @@ export function GenerateRankingsForm({
       if (newRanking) {
         toast({
           title: "Rankings generated",
-          description: `New ${newRanking.categoryName} rankings have been generated successfully.`
+          description: `New ${newRanking.categoryName} rankings have been generated successfully with the new configuration.`
         });
         
         // Call onSuccess to refresh the UI
@@ -124,6 +137,15 @@ export function GenerateRankingsForm({
           </SelectContent>
         </Select>
       </div>
+      
+      {currentConfig && (
+        <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+          <p className="font-medium mb-1">Current Configuration:</p>
+          <p>Sites: {currentConfig.siteCount}</p>
+          <p>Votes Range: {currentConfig.voteRange.minVotes} - {currentConfig.voteRange.maxVotes}</p>
+          <p>Last Modified: {new Date(currentConfig.lastModified).toLocaleString()}</p>
+        </div>
+      )}
       
       <div className="space-y-2">
         <label htmlFor="totalSites" className="text-sm font-medium">
@@ -192,7 +214,7 @@ export function GenerateRankingsForm({
       </Button>
       
       <p className="text-sm text-muted-foreground">
-        This will replace the current daily rankings for the selected category with a new random selection and reset all user votes.
+        This will replace the current daily rankings for the selected category with a new random selection using the specified configuration and reset all user votes. Future midnight regenerations will use this configuration until changed.
       </p>
     </div>
   );

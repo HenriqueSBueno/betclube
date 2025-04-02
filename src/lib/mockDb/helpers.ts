@@ -17,26 +17,10 @@ export const generateRankedSites = (
     .sort(() => 0.5 - Math.random())
     .slice(0, Math.min(siteCount, filteredSites.length));
   
-  // Create ranked sites with random votes
+  // Create ranked sites with random votes within the specified range
   return selectedSites.map(site => ({
     siteId: site.id,
     site: site,
     votes: Math.floor(Math.random() * (voteRange.maxVotes - voteRange.minVotes + 1)) + voteRange.minVotes
-  }));
-};
-
-// Generate initial daily rankings
-export const generateDailyRankings = () => {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  return rankingCategories.map(category => ({
-    id: category.id,
-    categoryId: category.id,
-    categoryName: category.name,
-    generationDate: now,
-    expiration: tomorrow,
-    sites: generateRankedSites(category.id)
   }));
 };
