@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { DailyRanking } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +27,7 @@ export function RankingList({ ranking }: RankingListProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
-  const [votedSiteId, setVotedSiteId] = useState<string | null>(null);
+  const [votedSiteIds, setVotedSiteIds] = useState<Record<string, boolean>>({});
 
   // Sort sites by votes in descending order
   const sortedSites = [...ranking.sites].sort((a, b) => b.votes - a.votes);
@@ -35,16 +35,33 @@ export function RankingList({ ranking }: RankingListProps) {
   // Calculate max votes for the progress bar
   const maxVotes = sortedSites[0]?.votes || 1;
 
+  // Load voted site IDs from localStorage when component mounts or ranking changes
+  useEffect(() => {
+    if (user) {
+      const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+      const storedVotes = localStorage.getItem(`userVotes_${user.id}_${today}`);
+      if (storedVotes) {
+        setVotedSiteIds(JSON.parse(storedVotes));
+      } else {
+        setVotedSiteIds({});
+      }
+    }
+  }, [user, ranking.id]);
+
+  const hasVotedInRanking = (rankingId: string) => {
+    return votedSiteIds[rankingId];
+  };
+
   const handleVote = async (siteId: string) => {
     if (!isAuthenticated) {
       setIsAuthModalOpen(true);
       return;
     }
     
-    if (votedSiteId) {
+    if (hasVotedInRanking(ranking.id)) {
       toast({
-        title: "Already voted",
-        description: "You have already voted for a site in this ranking",
+        title: "Já votou",
+        description: "Você já votou nesta lista hoje",
         variant: "destructive",
       });
       return;
@@ -62,11 +79,15 @@ export function RankingList({ ranking }: RankingListProps) {
         ip: mockIp,
       });
       
-      setVotedSiteId(siteId);
+      // Save the vote to localStorage
+      const today = new Date().toISOString().split('T')[0];
+      const updatedVotes = { ...votedSiteIds, [ranking.id]: true };
+      localStorage.setItem(`userVotes_${user.id}_${today}`, JSON.stringify(updatedVotes));
+      setVotedSiteIds(updatedVotes);
       
       toast({
-        title: "Vote recorded!",
-        description: "Thank you for your vote",
+        title: "Voto registrado!",
+        description: "Obrigado pelo seu voto",
       });
     }
   };
@@ -93,8 +114,8 @@ export function RankingList({ ranking }: RankingListProps) {
   const copyShareLink = () => {
     navigator.clipboard.writeText(shareLink);
     toast({
-      title: "Link copied",
-      description: "Ranking link copied to clipboard",
+      title: "Link copiado",
+      description: "Link da classificação copiado para a área de transferência",
     });
   };
 
@@ -103,7 +124,7 @@ export function RankingList({ ranking }: RankingListProps) {
       <div className="flex justify-end mb-4">
         <Button onClick={handleShare} className="gap-2">
           <Share className="h-4 w-4" />
-          Share
+          Compartilhar
         </Button>
       </div>
       
@@ -121,12 +142,12 @@ export function RankingList({ ranking }: RankingListProps) {
                   </div>
                   <Button
                     size="sm"
-                    className={`vote-button ${votedSiteId === rankedSite.siteId ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    className={`vote-button ${hasVotedInRanking(ranking.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
                     onClick={() => handleVote(rankedSite.siteId)}
-                    disabled={!!votedSiteId}
+                    disabled={hasVotedInRanking(ranking.id)}
                   >
                     <ArrowUp className="h-4 w-4 mr-1" />
-                    Vote
+                    Votar
                   </Button>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -147,15 +168,15 @@ export function RankingList({ ranking }: RankingListProps) {
                         className="inline-block"
                       >
                         <Button variant="outline" size="sm">
-                          Visit Site
+                          Visitar Site
                         </Button>
                       </a>
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="flex justify-between mb-1">
-                      <span className="text-xs text-muted-foreground">Popularity</span>
-                      <span className="text-xs font-medium">{rankedSite.votes} votes</span>
+                      <span className="text-xs text-muted-foreground">Popularidade</span>
+                      <span className="text-xs font-medium">{rankedSite.votes} votos</span>
                     </div>
                     <Progress
                       value={(rankedSite.votes / maxVotes) * 100}
@@ -177,9 +198,9 @@ export function RankingList({ ranking }: RankingListProps) {
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Share this ranking</DialogTitle>
+            <DialogTitle>Compartilhar essa classificação</DialogTitle>
             <DialogDescription>
-              Copy the link below to share this ranking with others.
+              Copie o link abaixo para compartilhar essa classificação com outros.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2">
@@ -188,7 +209,7 @@ export function RankingList({ ranking }: RankingListProps) {
                 {shareLink}
               </div>
             </div>
-            <Button onClick={copyShareLink}>Copy</Button>
+            <Button onClick={copyShareLink}>Copiar</Button>
           </div>
         </DialogContent>
       </Dialog>
