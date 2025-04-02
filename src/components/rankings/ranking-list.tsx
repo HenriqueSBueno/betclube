@@ -4,11 +4,12 @@ import { useAuth } from "@/lib/auth";
 import { DailyRanking } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Share } from "lucide-react";
+import { ArrowUp, Share, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { mockDb } from "@/lib/mockDb";
 import { useToast } from "@/hooks/use-toast";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -119,6 +120,9 @@ export function RankingList({ ranking }: RankingListProps) {
     });
   };
 
+  // Function to determine if a site is in the top 3
+  const isTopThreeSite = (index: number) => index < 3;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end mb-4">
@@ -129,66 +133,80 @@ export function RankingList({ ranking }: RankingListProps) {
       </div>
       
       <div className="space-y-4">
-        {sortedSites.map((rankedSite, index) => (
-          <Card 
-            key={rankedSite.siteId} 
-            className="overflow-hidden ranking-card-hover"
-          >
-            <CardContent className="p-0">
-              <div className="flex items-center p-4 md:p-6">
-                <div className="flex-shrink-0 mr-4 text-center">
-                  <div className="text-2xl font-bold text-primary mb-1">
-                    #{index + 1}
+        {sortedSites.map((rankedSite, index) => {
+          const isTopThree = isTopThreeSite(index);
+          return (
+            <Card 
+              key={rankedSite.siteId} 
+              className={`overflow-hidden ranking-card-hover transition-all ${isTopThree ? 'border-primary border-2 shadow-lg' : ''}`}
+            >
+              <CardContent className={`p-0 ${isTopThree ? 'bg-muted/30' : ''}`}>
+                <div className="flex items-center p-4 md:p-6">
+                  <div className="flex-shrink-0 mr-4 text-center">
+                    <div className={`text-2xl font-bold mb-1 ${isTopThree ? 'text-primary' : 'text-primary'}`}>
+                      #{index + 1}
+                    </div>
+                    <Button
+                      size="sm"
+                      className={`vote-button ${hasVotedInRanking(ranking.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      onClick={() => handleVote(rankedSite.siteId)}
+                      disabled={!isAuthenticated || hasVotedInRanking(ranking.id)}
+                      title={!isAuthenticated ? "Faça login para votar" : hasVotedInRanking(ranking.id) ? "Você já votou nesta lista hoje" : "Votar neste site"}
+                    >
+                      <ArrowUp className="h-4 w-4 mr-1" />
+                      Votar
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    className={`vote-button ${hasVotedInRanking(ranking.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                    onClick={() => handleVote(rankedSite.siteId)}
-                    disabled={!isAuthenticated || hasVotedInRanking(ranking.id)}
-                    title={!isAuthenticated ? "Faça login para votar" : hasVotedInRanking(ranking.id) ? "Você já votou nesta lista hoje" : "Votar neste site"}
-                  >
-                    <ArrowUp className="h-4 w-4 mr-1" />
-                    Votar
-                  </Button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-medium truncate">
+                            {rankedSite.site.name}
+                          </h3>
+                          {isTopThree && (
+                            <Badge variant="default" className="animate-pulse bg-primary/80">
+                              <TrendingUp className="h-3 w-3 mr-1" /> Trending
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {rankedSite.site.description}
+                        </p>
+                      </div>
+                      <div className="mt-2 md:mt-0 md:ml-4 flex-shrink-0">
+                        <a
+                          href={rankedSite.site.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <Button 
+                            variant={isTopThree ? "default" : "outline"} 
+                            size="sm"
+                            className={isTopThree ? "animate-pulse" : ""}
+                          >
+                            Visitar Site
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">Popularidade</span>
+                        <span className="text-xs font-medium">{rankedSite.votes} votos</span>
+                      </div>
+                      <Progress
+                        value={(rankedSite.votes / maxVotes) * 100}
+                        className={`h-2 ${isTopThree ? 'bg-muted/50' : ''}`}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium truncate">
-                        {rankedSite.site.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {rankedSite.site.description}
-                      </p>
-                    </div>
-                    <div className="mt-2 md:mt-0 md:ml-4 flex-shrink-0">
-                      <a
-                        href={rankedSite.site.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block"
-                      >
-                        <Button variant="outline" size="sm">
-                          Visitar Site
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs text-muted-foreground">Popularidade</span>
-                      <span className="text-xs font-medium">{rankedSite.votes} votos</span>
-                    </div>
-                    <Progress
-                      value={(rankedSite.votes / maxVotes) * 100}
-                      className="h-2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       
       <AuthModal 
