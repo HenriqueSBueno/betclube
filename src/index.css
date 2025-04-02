@@ -117,3 +117,19 @@
   }
 }
 
+/* Add more pronounced vote button animation */
+@keyframes vote {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+/* Add hover effect for vote button */
+.vote-button {
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+.vote-button:hover {
+  transform: scale(1.05);
+}

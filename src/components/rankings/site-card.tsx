@@ -47,7 +47,8 @@ export function SiteCard({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
-                    className={`vote-button bg-amber-400 hover:bg-amber-500 text-black ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                    variant="custom"
+                    className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-400 hover:bg-amber-500 text-black'}`}
                     onClick={() => onVote(rankedSite.siteId)}
                     disabled={hasVotedForSite || remainingVotes <= 0}
                     title={hasVotedForSite ? "Você já votou neste site hoje" : remainingVotes <= 0 ? "Você já usou todos os seus votos para esta lista hoje" : "Votar neste site"}
@@ -69,6 +70,7 @@ export function SiteCard({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
+                    variant="custom"
                     className="vote-button bg-amber-400 hover:bg-amber-500 text-black"
                     onClick={() => onVote(rankedSite.siteId)}
                   >
@@ -107,9 +109,9 @@ export function SiteCard({
                   className="inline-block"
                 >
                   <Button 
-                    variant={isTopThree ? "default" : "outline"} 
+                    variant="custom"
                     size="sm"
-                    className={`group ${isTopThree ? 'bg-amber-400 hover:bg-amber-500 text-black' : ''}`}
+                    className={`group ${isTopThree ? 'bg-amber-400 hover:bg-amber-500 text-black' : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}`}
                   >
                     {isTopThree && (
                       <Flame 
