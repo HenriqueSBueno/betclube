@@ -19,8 +19,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const formSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters."),
-  description: z.string().min(10, "Description must be at least 10 characters.")
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres."),
+  description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres.")
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -46,8 +46,8 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
     if (!user) {
       toast({
         variant: "destructive",
-        title: "Authentication error",
-        description: "You must be logged in to add categories."
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para adicionar categorias."
       });
       return;
     }
@@ -62,6 +62,11 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
         admin_owner_id: user.id
       });
       
+      // Verificar se o usuário tem ID válido
+      if (!user.id) {
+        throw new Error("ID de usuário não encontrado");
+      }
+      
       const newCategory = await CategoryService.create({
         name: values.name,
         description: values.description,
@@ -70,21 +75,21 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
       
       if (newCategory) {
         toast({
-          title: "Category added",
-          description: `${values.name} category has been added successfully.`
+          title: "Categoria adicionada",
+          description: `A categoria ${values.name} foi adicionada com sucesso.`
         });
         
         form.reset();
         onSuccess();
       } else {
-        throw new Error("Failed to add category");
+        throw new Error("Falha ao adicionar categoria");
       }
-    } catch (error) {
-      console.error("Failed to add category:", error);
+    } catch (error: any) {
+      console.error("Falha ao adicionar categoria:", error);
       toast({
         variant: "destructive",
-        title: "Failed to add category",
-        description: "An error occurred while adding the category. Please try again."
+        title: "Falha ao adicionar categoria",
+        description: error.message || "Ocorreu um erro ao adicionar a categoria. Por favor, tente novamente."
       });
     } finally {
       setIsSubmitting(false);
@@ -99,7 +104,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category Name</FormLabel>
+              <FormLabel>Nome da Categoria</FormLabel>
               <FormControl>
                 <Input {...field} disabled={isSubmitting} />
               </FormControl>
@@ -113,7 +118,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Descrição</FormLabel>
               <FormControl>
                 <Textarea 
                   {...field}
@@ -127,7 +132,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
         />
         
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Adding..." : "Add Category"}
+          {isSubmitting ? "Adicionando..." : "Adicionar Categoria"}
         </Button>
       </form>
     </Form>

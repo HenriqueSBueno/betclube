@@ -15,10 +15,16 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
   
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => await CategoryService.getAll(),
+    queryFn: async () => {
+      console.log("Buscando categorias do servidor...");
+      const results = await CategoryService.getAll();
+      console.log("Categorias recebidas:", results);
+      return results;
+    },
   });
 
   const handleCategoryAdded = () => {
+    console.log("Categoria adicionada, invalidando query...");
     // Invalidar a consulta para recarregar os dados
     queryClient.invalidateQueries({ queryKey: ['categories'] });
     onDataChange();
@@ -28,9 +34,9 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
     <div className="grid md:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Add New Category</CardTitle>
+          <CardTitle>Adicionar Nova Categoria</CardTitle>
           <CardDescription>
-            Create a new ranking category
+            Crie uma nova categoria de ranking
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -40,16 +46,16 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
       
       <Card>
         <CardHeader>
-          <CardTitle>Existing Categories ({categories.length})</CardTitle>
+          <CardTitle>Categorias Existentes ({categories.length})</CardTitle>
           <CardDescription>
-            All ranking categories in the database
+            Todas as categorias de ranking no banco de dados
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-4">Loading categories...</div>
+            <div className="text-center py-4">Carregando categorias...</div>
           ) : categories.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">No categories found</div>
+            <div className="text-center py-4 text-muted-foreground">Nenhuma categoria encontrada</div>
           ) : (
             <ul className="space-y-3">
               {categories.map((category) => (

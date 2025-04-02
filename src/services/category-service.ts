@@ -13,6 +13,7 @@ export class CategoryService {
         .select("*");
 
       if (error) {
+        console.error("Erro ao buscar categorias:", error);
         throw error;
       }
 
@@ -35,6 +36,7 @@ export class CategoryService {
         .maybeSingle();
 
       if (error) {
+        console.error("Erro ao buscar categoria por ID:", error);
         throw error;
       }
 
@@ -52,14 +54,21 @@ export class CategoryService {
     try {
       console.log("Enviando dados para criação de categoria:", category);
       
+      // Garantir que o objeto de categoria está corretamente formatado
+      const categoryData = {
+        name: category.name,
+        description: category.description,
+        admin_owner_id: category.admin_owner_id
+      };
+      
       const { data, error } = await supabase
         .from("ranking_categories")
-        .insert(category)
+        .insert(categoryData)
         .select()
         .single();
 
       if (error) {
-        console.error("Error creating category:", error);
+        console.error("Erro ao criar categoria:", error);
         throw error;
       }
 
@@ -84,6 +93,7 @@ export class CategoryService {
         .single();
 
       if (error) {
+        console.error("Erro ao atualizar categoria:", error);
         throw error;
       }
 
@@ -105,6 +115,7 @@ export class CategoryService {
         .eq("id", id);
 
       if (error) {
+        console.error("Erro ao excluir categoria:", error);
         throw error;
       }
 
