@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,7 @@ export function SiteCard({
                   <Button 
                     variant={isTopThree ? "default" : "outline"} 
                     size="sm"
-                    className={isTopThree ? "animate-pulse group" : "group"}
+                    className="group"
                   >
                     {isTopThree && (
                       <Flame 
