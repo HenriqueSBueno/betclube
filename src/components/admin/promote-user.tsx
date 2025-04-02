@@ -12,6 +12,12 @@ interface UserProfile {
   role: string;
 }
 
+type ProfileData = {
+  id: string;
+  email: string | null;
+  role: string;
+};
+
 export function PromoteUser() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +45,7 @@ export function PromoteUser() {
         throw new Error("Usuário não encontrado");
       }
       
-      const userProfile = data as UserProfile;
+      const userProfile = data as ProfileData;
       
       // Check if already admin
       if (userProfile.role === 'admin') {

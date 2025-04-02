@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface UserProfile {
   id: string;
   role: string;
-  email: string;
+  email: string | null;
 }
 
 interface AuthUser extends User {
@@ -44,9 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return userObj;
       }
       
+      const profile = data as UserProfile;
+      
       return { 
         ...userObj, 
-        role: data?.role || 'user' 
+        role: profile?.role || 'user' 
       } as AuthUser;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);

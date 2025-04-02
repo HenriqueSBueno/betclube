@@ -11,7 +11,7 @@ import { PromoteUser } from "./promote-user";
 
 interface UserProfile {
   id: string;
-  email: string;
+  email: string | null;
   role: string;
   created_at: string;
 }
@@ -82,7 +82,7 @@ export function UserManagement() {
     }
   };
   
-  const getUserInitials = (email: string) => {
+  const getUserInitials = (email: string | null) => {
     return email ? email.charAt(0).toUpperCase() : "U";
   };
   
