@@ -4,23 +4,34 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { RankingTabs } from "@/components/rankings/ranking-tabs";
 import { RankingCategory, DailyRanking } from "@/types";
-import { mockDb } from "@/lib/mockDb";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { RankingsService } from "@/services/rankings-service";
 
 const Home = () => {
-  const [categories, setCategories] = useState<RankingCategory[]>([]);
-  const [rankings, setRankings] = useState<DailyRanking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Buscar categorias
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ranking_categories')
+        .select('*');
+      
+      if (error) throw error;
+      return data as RankingCategory[];
+    }
+  });
+  
+  // Buscar rankings
+  const { data: rankings = [], isLoading: rankingsLoading } = useQuery({
+    queryKey: ['rankings'],
+    queryFn: async () => {
+      return await RankingsService.getAllRankings();
+    },
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
+  });
 
-  useEffect(() => {
-    // Load data from mock database
-    const loadData = () => {
-      setCategories(mockDb.rankingCategories.getAll());
-      setRankings(mockDb.dailyRankings.getAll());
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, []);
+  const isLoading = categoriesLoading || rankingsLoading;
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { mockDb } from "@/lib/mockDb";
 import { RankingCategory } from "@/types";
 import { ArrowDown } from "lucide-react";
-import { VotingService } from "@/components/rankings/voting-service";
-import { RankingConfiguration } from "@/lib/mockDb/ranking-service";
+import { VotingService } from "@/services/voting-service";
+import { RankingsService } from "@/services/rankings-service";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface GenerateRankingsFormProps {
   categories: RankingCategory[];
@@ -26,53 +26,88 @@ export function GenerateRankingsForm({
   onSuccess 
 }: GenerateRankingsFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [totalSites, setTotalSites] = useState("10");
   const [minVotes, setMinVotes] = useState("0");
   const [maxVotes, setMaxVotes] = useState("100");
-  const [currentConfig, setCurrentConfig] = useState<RankingConfiguration | null>(null);
-
-  // Load configuration when category changes
-  useEffect(() => {
-    if (selectedCategory) {
-      const config = mockDb.dailyRankings.getConfiguration(selectedCategory);
-      setCurrentConfig(config);
-      setTotalSites(config.siteCount.toString());
-      setMinVotes(config.voteRange.minVotes.toString());
-      setMaxVotes(config.voteRange.maxVotes.toString());
+  
+  // Buscar configuração atual quando a categoria é selecionada
+  const { data: currentConfig } = useQuery({
+    queryKey: ['rankingConfig', selectedCategory],
+    queryFn: () => RankingsService.getConfig(selectedCategory),
+    enabled: !!selectedCategory,
+    onSuccess: (data) => {
+      if (data) {
+        setTotalSites(data.site_count.toString());
+        setMinVotes(data.min_votes.toString());
+        setMaxVotes(data.max_votes.toString());
+      }
     }
-  }, [selectedCategory]);
+  });
+  
+  // Mutação para regenerar ranking
+  const regenerateMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedCategory) throw new Error("Nenhuma categoria selecionada");
+      
+      // Parse and validate inputs
+      const sitesCount = parseInt(totalSites, 10);
+      const minVotesCount = parseInt(minVotes, 10);
+      const maxVotesCount = parseInt(maxVotes, 10);
+      
+      // Validação de entrada
+      if (isNaN(sitesCount) || sitesCount < 1) {
+        throw new Error("O número total de sites deve ser positivo");
+      }
+      
+      if (isNaN(minVotesCount) || isNaN(maxVotesCount) || minVotesCount < 0 || maxVotesCount < minVotesCount) {
+        throw new Error("Faixa de votos inválida");
+      }
+      
+      // Obter o ranking existente para resetar votos
+      const existingRanking = await RankingsService.getRankingByCategory(selectedCategory);
+      if (existingRanking) {
+        // Reset votes for this ranking
+        await VotingService.resetVotesForRanking(existingRanking.id);
+      }
+      
+      // Regenerar ranking
+      return RankingsService.regenerateRanking(
+        selectedCategory, 
+        sitesCount, 
+        { minVotes: minVotesCount, maxVotes: maxVotesCount }
+      );
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rankings gerados",
+        description: "Novos rankings foram gerados com sucesso com a nova configuração."
+      });
+      
+      // Invalidar consultas para atualizar a UI
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      
+      // Chamar callback de sucesso
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      console.error("Falha ao gerar rankings:", error);
+      toast({
+        variant: "destructive",
+        title: "Falha na geração",
+        description: error.message || "Ocorreu um erro ao gerar os rankings."
+      });
+    }
+  });
 
   const handleGenerate = async () => {
     if (!selectedCategory) {
       toast({
         variant: "destructive",
-        title: "No category selected",
-        description: "Please select a category to generate rankings."
-      });
-      return;
-    }
-    
-    // Parse and validate inputs
-    const sitesCount = parseInt(totalSites, 10);
-    const minVotesCount = parseInt(minVotes, 10);
-    const maxVotesCount = parseInt(maxVotes, 10);
-    
-    if (isNaN(sitesCount) || sitesCount < 1) {
-      toast({
-        variant: "destructive",
-        title: "Invalid sites count",
-        description: "Total sites must be a positive number."
-      });
-      return;
-    }
-    
-    if (isNaN(minVotesCount) || isNaN(maxVotesCount) || minVotesCount < 0 || maxVotesCount < minVotesCount) {
-      toast({
-        variant: "destructive",
-        title: "Invalid votes range",
-        description: "Min votes must be non-negative and max votes must be greater than or equal to min votes."
+        title: "Nenhuma categoria selecionada",
+        description: "Por favor, selecione uma categoria para gerar rankings."
       });
       return;
     }
@@ -80,37 +115,7 @@ export function GenerateRankingsForm({
     setIsGenerating(true);
     
     try {
-      // Get the existing ranking to reset votes
-      const existingRanking = mockDb.dailyRankings.findByCategory(selectedCategory);
-      if (existingRanking) {
-        // Reset votes for this ranking
-        VotingService.resetVotesForRanking(existingRanking.id);
-      }
-      
-      const newRanking = mockDb.dailyRankings.regenerate(
-        selectedCategory, 
-        sitesCount, 
-        { minVotes: minVotesCount, maxVotes: maxVotesCount }
-      );
-      
-      if (newRanking) {
-        toast({
-          title: "Rankings generated",
-          description: `New ${newRanking.categoryName} rankings have been generated successfully with the new configuration.`
-        });
-        
-        // Call onSuccess to refresh the UI
-        onSuccess();
-      } else {
-        throw new Error("Failed to generate rankings");
-      }
-    } catch (error) {
-      console.error("Failed to generate rankings:", error);
-      toast({
-        variant: "destructive",
-        title: "Generation failed",
-        description: "An error occurred while generating rankings."
-      });
+      await regenerateMutation.mutateAsync();
     } finally {
       setIsGenerating(false);
     }
@@ -141,9 +146,9 @@ export function GenerateRankingsForm({
       {currentConfig && (
         <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
           <p className="font-medium mb-1">Current Configuration:</p>
-          <p>Sites: {currentConfig.siteCount}</p>
-          <p>Votes Range: {currentConfig.voteRange.minVotes} - {currentConfig.voteRange.maxVotes}</p>
-          <p>Last Modified: {new Date(currentConfig.lastModified).toLocaleString()}</p>
+          <p>Sites: {currentConfig.site_count}</p>
+          <p>Votes Range: {currentConfig.min_votes} - {currentConfig.max_votes}</p>
+          <p>Last Modified: {new Date(currentConfig.last_modified).toLocaleString()}</p>
         </div>
       )}
       
@@ -200,10 +205,10 @@ export function GenerateRankingsForm({
       
       <Button 
         onClick={handleGenerate} 
-        disabled={!selectedCategory || isGenerating}
+        disabled={!selectedCategory || isGenerating || regenerateMutation.isPending}
         className="w-full"
       >
-        {isGenerating ? (
+        {isGenerating || regenerateMutation.isPending ? (
           <>Generating...</>
         ) : (
           <>

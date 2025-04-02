@@ -8,8 +8,9 @@ import { AuthModal } from "@/components/auth/auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { SiteCard } from "./site-card";
 import { ShareDialog } from "./share-dialog";
-import { VotingService } from "./voting-service";
+import { VotingService } from "@/services/voting-service";
 import { ShareService } from "./share-service";
+import { QueryClient, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface RankingListProps {
   ranking: DailyRanking;
@@ -18,11 +19,10 @@ interface RankingListProps {
 export function RankingList({ ranking }: RankingListProps) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
-  const [votedSiteIds, setVotedSiteIds] = useState<Record<string, boolean>>({});
-  const [remainingVotes, setRemainingVotes] = useState(0);
 
   // Sort sites by votes in descending order
   const sortedSites = [...ranking.sites].sort((a, b) => b.votes - a.votes);
@@ -30,17 +30,42 @@ export function RankingList({ ranking }: RankingListProps) {
   // Calculate max votes for the progress bar
   const maxVotes = sortedSites[0]?.votes || 1;
 
-  // Load voted site IDs from localStorage and calculate remaining votes
-  useEffect(() => {
-    if (user) {
-      const userVotes = VotingService.loadUserVotes(user);
-      setVotedSiteIds(userVotes);
-      
-      // Calculate remaining votes for this ranking
-      const remaining = VotingService.getRemainingVotes(user, ranking.id);
-      setRemainingVotes(remaining);
-    }
-  }, [user, ranking.id]);
+  // Consultar votos do usuário
+  const { data: votedSiteIds = {} } = useQuery({
+    queryKey: ['userVotes', user?.id, ranking.id],
+    queryFn: () => VotingService.loadUserVotes(user?.id, ranking.id),
+    enabled: !!user,
+    refetchOnWindowFocus: false,
+  });
+
+  // Consultar votos restantes
+  const { data: remainingVotes = 0 } = useQuery({
+    queryKey: ['remainingVotes', user?.id, ranking.id],
+    queryFn: () => VotingService.getRemainingVotes(user?.id, ranking.id),
+    enabled: !!user,
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutação para registrar voto
+  const voteMutation = useMutation({
+    mutationFn: async ({ siteId }: { siteId: string }) => {
+      if (!user) throw new Error("Usuário não autenticado");
+      return VotingService.registerVote(user, ranking.id, siteId);
+    },
+    onSuccess: () => {
+      // Invalidar consultas para atualizar UI
+      queryClient.invalidateQueries({ queryKey: ['userVotes'] });
+      queryClient.invalidateQueries({ queryKey: ['remainingVotes'] });
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const hasVotedForSite = (siteId: string) => {
     const voteKey = VotingService.getSiteVoteKey(siteId, ranking.id);
@@ -62,29 +87,8 @@ export function RankingList({ ranking }: RankingListProps) {
       return;
     }
     
-    if (user) {
-      try {
-        const updatedVotes = VotingService.registerVote(user, ranking.id, siteId);
-        setVotedSiteIds(updatedVotes);
-        
-        // Update remaining votes after successful vote
-        setRemainingVotes(prev => Math.max(0, prev - 1));
-        
-        // Calculate which vote number this is (total - remaining)
-        const voteNumber = VotingService.VOTES_PER_RANKING - remainingVotes + 1;
-        
-        toast({
-          title: `Voto ${voteNumber} de ${VotingService.VOTES_PER_RANKING} registrado!`,
-          description: "Obrigado pelo seu voto",
-        });
-      } catch (error) {
-        toast({
-          title: "Erro",
-          description: error instanceof Error ? error.message : "Não foi possível registrar seu voto",
-          variant: "destructive",
-        });
-      }
-    }
+    // Registrar voto
+    voteMutation.mutate({ siteId });
   };
 
   const handleShare = () => {

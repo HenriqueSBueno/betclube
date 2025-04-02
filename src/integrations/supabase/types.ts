@@ -52,6 +52,7 @@ export type Database = {
         Row: {
           category_id: string
           category_name: string
+          config_id: string | null
           expiration: string
           generation_date: string
           id: string
@@ -59,6 +60,7 @@ export type Database = {
         Insert: {
           category_id: string
           category_name: string
+          config_id?: string | null
           expiration: string
           generation_date?: string
           id?: string
@@ -66,6 +68,7 @@ export type Database = {
         Update: {
           category_id?: string
           category_name?: string
+          config_id?: string | null
           expiration?: string
           generation_date?: string
           id?: string
@@ -76,6 +79,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "ranking_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_rankings_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "ranking_configs"
             referencedColumns: ["id"]
           },
         ]
@@ -160,6 +170,41 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      ranking_configs: {
+        Row: {
+          category_id: string
+          id: string
+          last_modified: string
+          max_votes: number
+          min_votes: number
+          site_count: number
+        }
+        Insert: {
+          category_id: string
+          id?: string
+          last_modified?: string
+          max_votes?: number
+          min_votes?: number
+          site_count?: number
+        }
+        Update: {
+          category_id?: string
+          id?: string
+          last_modified?: string
+          max_votes?: number
+          min_votes?: number
+          site_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ranking_configs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ranking_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shared_rankings: {
         Row: {

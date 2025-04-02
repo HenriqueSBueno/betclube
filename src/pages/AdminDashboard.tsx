@@ -10,25 +10,33 @@ import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
 import { useAuth } from "@/lib/auth";
 import { RankingCategory } from "@/types";
-import { mockDb } from "@/lib/mockDb";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const AdminDashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [categories, setCategories] = useState<RankingCategory[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
   
-  const loadData = () => {
-    setCategories(mockDb.rankingCategories.getAll());
-    setDataLoading(false);
+  // Buscar categorias do servidor
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ranking_categories')
+        .select('*');
+      
+      if (error) throw error;
+      return data as RankingCategory[];
+    },
+    enabled: isAuthenticated && user?.role === "admin"
+  });
+
+  // Espaço reservado para ações que precisam ser executadas quando os dados são alterados
+  const handleDataChange = () => {
+    // No lugar de chamar loadData diretamente,
+    // invalidamos as consultas do React Query para atualizar os dados
   };
 
-  useEffect(() => {
-    if (isAuthenticated && user?.role === "admin") {
-      loadData();
-    }
-  }, [isAuthenticated, user]);
-
-  if (isLoading) {
+  if (isLoading || categoriesLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-pulse text-lg">Loading...</div>
@@ -61,15 +69,15 @@ const AdminDashboard = () => {
           </TabsList>
           
           <TabsContent value="sites">
-            <SiteManagement categories={categories} onDataChange={loadData} />
+            <SiteManagement categories={categories} onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="categories">
-            <CategoryManagement onDataChange={loadData} />
+            <CategoryManagement onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="rankings">
-            <RankingsManagement categories={categories} onDataChange={loadData} />
+            <RankingsManagement categories={categories} onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="users">
