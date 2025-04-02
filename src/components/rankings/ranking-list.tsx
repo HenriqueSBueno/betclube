@@ -2,21 +2,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { DailyRanking } from "@/types";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Share, TrendingUp } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { mockDb } from "@/lib/mockDb";
-import { useToast } from "@/hooks/use-toast";
+import { Share } from "lucide-react";
 import { AuthModal } from "@/components/auth/auth-modal";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { SiteCard } from "./site-card";
+import { ShareDialog } from "./share-dialog";
+import { VotingService } from "./voting-service";
+import { ShareService } from "./share-service";
 
 interface RankingListProps {
   ranking: DailyRanking;
@@ -39,18 +32,13 @@ export function RankingList({ ranking }: RankingListProps) {
   // Load voted site IDs from localStorage when component mounts or ranking changes
   useEffect(() => {
     if (user) {
-      const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-      const storedVotes = localStorage.getItem(`userVotes_${user.id}_${today}`);
-      if (storedVotes) {
-        setVotedSiteIds(JSON.parse(storedVotes));
-      } else {
-        setVotedSiteIds({});
-      }
+      const userVotes = VotingService.loadUserVotes(user);
+      setVotedSiteIds(userVotes);
     }
   }, [user, ranking.id]);
 
-  const hasVotedInRanking = (rankingId: string) => {
-    return votedSiteIds[rankingId];
+  const hasVotedInRanking = () => {
+    return VotingService.hasVotedInRanking(user, ranking.id, votedSiteIds);
   };
 
   const handleVote = async (siteId: string) => {
@@ -59,7 +47,7 @@ export function RankingList({ ranking }: RankingListProps) {
       return;
     }
     
-    if (hasVotedInRanking(ranking.id)) {
+    if (hasVotedInRanking()) {
       toast({
         title: "Já votou",
         description: "Você já votou nesta lista hoje",
@@ -69,21 +57,7 @@ export function RankingList({ ranking }: RankingListProps) {
     }
     
     if (user) {
-      // In a real app, we'd get the actual IP address
-      const mockIp = "127.0.0.1";
-      
-      mockDb.votes.create({
-        userId: user.id,
-        rankingId: ranking.id,
-        siteId,
-        voteDate: new Date(),
-        ip: mockIp,
-      });
-      
-      // Save the vote to localStorage
-      const today = new Date().toISOString().split('T')[0];
-      const updatedVotes = { ...votedSiteIds, [ranking.id]: true };
-      localStorage.setItem(`userVotes_${user.id}_${today}`, JSON.stringify(updatedVotes));
+      const updatedVotes = VotingService.registerVote(user, ranking.id, siteId);
       setVotedSiteIds(updatedVotes);
       
       toast({
@@ -94,30 +68,9 @@ export function RankingList({ ranking }: RankingListProps) {
   };
 
   const handleShare = () => {
-    // Generate a fake unique token for sharing
-    const token = Math.random().toString(36).substring(2, 15);
-    const link = `${window.location.origin}/shared/${token}`;
-    
-    if (user) {
-      mockDb.sharedRankings.create({
-        rankingId: ranking.id,
-        sourceUserId: user.id,
-        uniqueToken: token,
-        shareDate: new Date(),
-        expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      });
-    }
-    
+    const link = ShareService.generateShareLink(ranking.id, user);
     setShareLink(link);
     setIsShareDialogOpen(true);
-  };
-
-  const copyShareLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    toast({
-      title: "Link copiado",
-      description: "Link da classificação copiado para a área de transferência",
-    });
   };
 
   // Function to determine if a site is in the top 3
@@ -136,75 +89,16 @@ export function RankingList({ ranking }: RankingListProps) {
         {sortedSites.map((rankedSite, index) => {
           const isTopThree = isTopThreeSite(index);
           return (
-            <Card 
-              key={rankedSite.siteId} 
-              className={`overflow-hidden ranking-card-hover transition-all ${isTopThree ? 'border-primary border-2 shadow-lg' : ''}`}
-            >
-              <CardContent className={`p-0 ${isTopThree ? 'bg-muted/30' : ''}`}>
-                <div className="flex items-center p-4 md:p-6">
-                  <div className="flex-shrink-0 mr-4 text-center">
-                    <div className={`text-2xl font-bold mb-1 ${isTopThree ? 'text-primary' : 'text-primary'}`}>
-                      #{index + 1}
-                    </div>
-                    <Button
-                      size="sm"
-                      className={`vote-button ${hasVotedInRanking(ranking.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                      onClick={() => handleVote(rankedSite.siteId)}
-                      disabled={!isAuthenticated || hasVotedInRanking(ranking.id)}
-                      title={!isAuthenticated ? "Faça login para votar" : hasVotedInRanking(ranking.id) ? "Você já votou nesta lista hoje" : "Votar neste site"}
-                    >
-                      <ArrowUp className="h-4 w-4 mr-1" />
-                      Votar
-                    </Button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-medium truncate">
-                            {rankedSite.site.name}
-                          </h3>
-                          {isTopThree && (
-                            <Badge variant="default" className="animate-pulse bg-primary/80">
-                              <TrendingUp className="h-3 w-3 mr-1" /> Trending
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {rankedSite.site.description}
-                        </p>
-                      </div>
-                      <div className="mt-2 md:mt-0 md:ml-4 flex-shrink-0">
-                        <a
-                          href={rankedSite.site.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block"
-                        >
-                          <Button 
-                            variant={isTopThree ? "default" : "outline"} 
-                            size="sm"
-                            className={isTopThree ? "animate-pulse" : ""}
-                          >
-                            Visitar Site
-                          </Button>
-                        </a>
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Popularidade</span>
-                        <span className="text-xs font-medium">{rankedSite.votes} votos</span>
-                      </div>
-                      <Progress
-                        value={(rankedSite.votes / maxVotes) * 100}
-                        className={`h-2 ${isTopThree ? 'bg-muted/50' : ''}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SiteCard
+              key={rankedSite.siteId}
+              rankedSite={rankedSite}
+              index={index}
+              maxVotes={maxVotes}
+              isTopThree={isTopThree}
+              hasVotedInRanking={hasVotedInRanking()}
+              onVote={handleVote}
+              isAuthenticated={isAuthenticated}
+            />
           );
         })}
       </div>
@@ -214,24 +108,11 @@ export function RankingList({ ranking }: RankingListProps) {
         onClose={() => setIsAuthModalOpen(false)} 
       />
       
-      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Compartilhar essa classificação</DialogTitle>
-            <DialogDescription>
-              Copie o link abaixo para compartilhar essa classificação com outros.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <div className="grid flex-1 gap-2">
-              <div className="bg-muted p-2 rounded-md text-sm truncate">
-                {shareLink}
-              </div>
-            </div>
-            <Button onClick={copyShareLink}>Copiar</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ShareDialog
+        isOpen={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+        shareLink={shareLink}
+      />
     </div>
   );
 }

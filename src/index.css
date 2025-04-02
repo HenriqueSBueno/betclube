@@ -107,3 +107,13 @@
 .vote-button:active {
   animation: vote 0.3s ease-in-out;
 }
+
+@keyframes bounce {
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-4px); 
+  }
+}
+
