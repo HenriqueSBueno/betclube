@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,10 +39,12 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     const loadSites = async () => {
       setIsLoading(true);
       try {
+        console.log("[SiteManagement] Loading betting sites");
         const sitesList = await mockDb.bettingSites.getAll();
+        console.log("[SiteManagement] Sites loaded:", sitesList);
         setSites(sitesList);
       } catch (error) {
-        console.error("Error loading sites:", error);
+        console.error("[SiteManagement] Error loading sites:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -126,12 +127,14 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   };
   
   const handleDataChange = async () => {
+    console.log("[SiteManagement] handleDataChange called - refreshing data");
     try {
       const updatedSites = await mockDb.bettingSites.getAll();
+      console.log("[SiteManagement] Updated sites data:", updatedSites);
       setSites(updatedSites);
       onDataChange();
     } catch (error) {
-      console.error("Error refreshing sites data:", error);
+      console.error("[SiteManagement] Error refreshing sites data:", error);
     }
   };
 

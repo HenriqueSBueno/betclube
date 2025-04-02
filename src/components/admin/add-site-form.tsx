@@ -55,12 +55,28 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!user) return;
+    console.log("[AddSiteForm] Form submission values:", values);
+    console.log("[AddSiteForm] Current user:", user);
+    
+    if (!user) {
+      console.error("[AddSiteForm] No user found, cannot submit form");
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      const newSite = mockDb.bettingSites.create({
+      console.log("[AddSiteForm] Creating site with data:", {
+        name: values.name,
+        url: values.url,
+        description: values.description,
+        category: values.categories,
+        adminOwnerId: user.id,
+        commission: values.commission,
+        ltv: values.ltv
+      });
+      
+      const newSite = await mockDb.bettingSites.create({
         name: values.name,
         url: values.url,
         description: values.description,
@@ -72,6 +88,8 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
         ltv: values.ltv
       });
       
+      console.log("[AddSiteForm] Site created successfully:", newSite);
+      
       toast({
         title: "Site added",
         description: `${values.name} has been added successfully.`
@@ -80,7 +98,7 @@ export function AddSiteForm({ categories, onSuccess }: AddSiteFormProps) {
       form.reset();
       onSuccess();
     } catch (error) {
-      console.error("Failed to add site:", error);
+      console.error("[AddSiteForm] Failed to add site:", error);
       toast({
         variant: "destructive",
         title: "Failed to add site",

@@ -1,3 +1,4 @@
+
 import { bettingSites } from './models';
 import { BettingSite } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -130,7 +131,20 @@ export const bettingSiteService = {
   },
   
   create: async (site: Omit<BettingSite, 'id'>): Promise<BettingSite> => {
+    console.log("[BettingSiteService] Creating site:", site);
     try {
+      console.log("[BettingSiteService] Preparing Supabase data:", {
+        name: site.name,
+        url: site.url,
+        description: site.description,
+        category: site.category,
+        logo_url: site.logoUrl || null,
+        registration_date: site.registrationDate.toISOString(),
+        admin_owner_id: site.adminOwnerId,
+        commission: site.commission || null,
+        ltv: site.ltv || null
+      });
+      
       const { data, error } = await supabase
         .from('betting_sites')
         .insert({
@@ -148,13 +162,16 @@ export const bettingSiteService = {
         .single();
       
       if (error) {
-        console.error('Error creating betting site:', error);
+        console.error('[BettingSiteService] Error creating betting site in Supabase:', error);
+        console.log('[BettingSiteService] Using fallback with mock data');
         // Fallback to mock data
         const newSite = { ...site, id: String(bettingSites.length + 1) };
         bettingSites.push(newSite);
+        console.log('[BettingSiteService] Site added to mock data:', newSite);
         return newSite;
       }
       
+      console.log('[BettingSiteService] Site created in Supabase:', data);
       return {
         id: data.id,
         name: data.name,
@@ -168,10 +185,11 @@ export const bettingSiteService = {
         ltv: data.ltv || undefined
       };
     } catch (error) {
-      console.error('Error in create:', error);
+      console.error('[BettingSiteService] Error in create:', error);
       // Fallback to mock data
       const newSite = { ...site, id: String(bettingSites.length + 1) };
       bettingSites.push(newSite);
+      console.log('[BettingSiteService] Site added to mock data (after exception):', newSite);
       return newSite;
     }
   },
