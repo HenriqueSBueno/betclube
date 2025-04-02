@@ -55,6 +55,16 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
       return;
     }
     
+    if (user.role !== "admin") {
+      setError("Apenas administradores podem adicionar categorias.");
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Você não tem permissão para adicionar categorias."
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     
