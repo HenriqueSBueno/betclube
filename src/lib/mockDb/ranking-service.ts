@@ -38,8 +38,24 @@ export const rankingService = {
   }
 };
 
+// Create a function to generate initial daily rankings
+const generateInitialDailyRankings = () => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return rankingCategories.map(category => ({
+    id: category.id,
+    categoryId: category.id,
+    categoryName: category.name,
+    generationDate: now,
+    expiration: tomorrow,
+    sites: generateRankedSites(category.id, 10, { minVotes: 0, maxVotes: 100 })
+  }));
+};
+
 // Initialize daily rankings on first import
 if (dailyRankings.length === 0) {
-  const initialRankings = generateDailyRankings();
+  const initialRankings = generateInitialDailyRankings();
   initialRankings.forEach(ranking => dailyRankings.push(ranking));
 }
