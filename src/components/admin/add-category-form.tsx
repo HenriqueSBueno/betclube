@@ -55,7 +55,13 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
     setIsSubmitting(true);
     
     try {
-      // Garantir que o admin_owner_id seja fornecido corretamente
+      console.log("Usuário atual:", user);
+      console.log("Enviando dados de categoria:", {
+        name: values.name,
+        description: values.description,
+        admin_owner_id: user.id
+      });
+      
       const newCategory = await CategoryService.create({
         name: values.name,
         description: values.description,
