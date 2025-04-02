@@ -1,11 +1,13 @@
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerateRankingsForm } from "@/components/admin/generate-rankings-form";
-import { mockDb } from "@/lib/mockDb";
-import { DailyRanking, RankingCategory } from "@/types";
-import { RankingConfiguration } from "@/lib/mockDb/ranking-service";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { RankingsService } from "@/services/rankings-service";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { RankingCategory } from "@/types";
 
 interface RankingsManagementProps {
   categories: RankingCategory[];
@@ -13,164 +15,124 @@ interface RankingsManagementProps {
 }
 
 export function RankingsManagement({ categories, onDataChange }: RankingsManagementProps) {
-  const [rankings, setRankings] = useState<DailyRanking[]>([]);
-  const [configs, setConfigs] = useState<RankingConfiguration[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setRankings(mockDb.dailyRankings.getAll());
-    
-    // Load configurations for all categories
-    const categoryConfigs = categories.map(category => 
-      mockDb.dailyRankings.getConfiguration(category.id)
-    );
-    setConfigs(categoryConfigs);
-    
-    setIsLoading(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || "");
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  
+  const { data: rankings = [], isLoading } = useQuery({
+    queryKey: ["rankings"],
+    queryFn: async () => await RankingsService.getAllRankings(),
+    enabled: categories.length > 0,
+  });
+  
+  const handleGenerationSuccess = () => {
+    onDataChange();
   };
-
-  // Helper to find configuration for a category
-  const getConfigForCategory = (categoryId: string) => {
-    return configs.find(config => config.categoryId === categoryId);
-  };
-
-  // Simulate midnight ranking regeneration for demo purposes
-  const handleSimulateMidnightRegeneration = () => {
-    setIsLoading(true);
+  
+  const handleGenerateAllRankings = async () => {
+    if (isBatchGenerating) return;
+    
+    setIsBatchGenerating(true);
     
     try {
-      const updatedRankings = mockDb.dailyRankings.generateDailyBatch();
+      await RankingsService.generateDailyBatch();
       
-      setRankings([...mockDb.dailyRankings.getAll()]);
-      
-      // Reset votes for all rankings
-      updatedRankings.forEach(ranking => {
-        if (ranking) {
-          // Here we would reset votes for this ranking in a real app
-        }
-      });
-      
+      toast.success("All rankings successfully generated");
       onDataChange();
     } catch (error) {
-      console.error("Failed to simulate midnight regeneration:", error);
+      toast.error("Failed to generate rankings");
+      console.error("Error generating rankings:", error);
     } finally {
-      setIsLoading(false);
+      setIsBatchGenerating(false);
     }
   };
-
+  
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+  const categoryRanking = rankings.find(r => r.categoryId === selectedCategoryId);
+  
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate Daily Rankings</CardTitle>
-          <CardDescription>
-            Create new random rankings for a category
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GenerateRankingsForm 
-            categories={categories} 
-            onSuccess={() => {
-              loadData();
-              onDataChange();
-            }}
-          />
-        </CardContent>
-      </Card>
-      
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Rankings</CardTitle>
-            <CardDescription>
-              Active daily rankings by category
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-4">Loading rankings...</div>
-            ) : (
-              <ul className="space-y-3">
-                {rankings.map((ranking) => {
-                  const config = getConfigForCategory(ranking.categoryId);
-                  
-                  return (
-                    <li key={ranking.id} className="border-b pb-3">
-                      <div className="font-medium">
-                        {ranking.categoryName}
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Generated: </span>
-                        {new Date(ranking.generationDate).toLocaleDateString()}
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Sites: </span>
-                        {ranking.sites.length}
-                        {config && ` (configured for ${config.siteCount})`}
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Vote Range: </span>
-                        {config ? `${config.voteRange.minVotes} - ${config.voteRange.maxVotes}` : "Default"}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+    <div className="grid gap-6">
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-medium">Daily Rankings</h3>
+          <p className="text-sm text-muted-foreground">
+            Generate and manage daily rankings for each category
+          </p>
+        </div>
         
+        <Button
+          onClick={handleGenerateAllRankings}
+          disabled={isBatchGenerating || categories.length === 0}
+        >
+          {isBatchGenerating ? "Generating..." : "Generate All Rankings"}
+        </Button>
+      </div>
+      
+      {categories.length === 0 ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Ranking Configurations</CardTitle>
-            <CardDescription>
-              Current settings for midnight regeneration
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Sites</TableHead>
-                  <TableHead>Vote Range</TableHead>
-                  <TableHead>Last Modified</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {configs.map((config) => {
-                  const category = categories.find(c => c.id === config.categoryId);
-                  return (
-                    <TableRow key={config.categoryId}>
-                      <TableCell>{category?.name || "Unknown"}</TableCell>
-                      <TableCell>{config.siteCount}</TableCell>
-                      <TableCell>{config.voteRange.minVotes} - {config.voteRange.maxVotes}</TableCell>
-                      <TableCell>{new Date(config.lastModified).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                onClick={handleSimulateMidnightRegeneration}
-                disabled={isLoading}
-              >
-                Simulate Midnight Regeneration
-              </Button>
+          <CardContent className="pt-6">
+            <div className="text-center py-4">
+              No categories available. Add a category first.
             </div>
           </CardContent>
         </Card>
-      </div>
+      ) : (
+        <>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Select Category</CardTitle>
+              <CardDescription>
+                Choose a category to generate or update its ranking
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="w-full md:w-[240px]">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+          
+          {selectedCategory && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Generate {selectedCategory.name} Ranking</CardTitle>
+                <CardDescription>
+                  Configure and generate the ranking for {selectedCategory.name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GenerateRankingsForm 
+                  categoryId={selectedCategoryId}
+                  onSuccess={handleGenerationSuccess}
+                />
+                
+                {categoryRanking && (
+                  <div className="mt-6 pt-6 border-t">
+                    <h4 className="font-medium mb-2">Current Ranking Info</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Last generated: {new Date(categoryRanking.generationDate).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Sites: {categoryRanking.sites.length}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }
-
-// Import Button for the simulation feature
-import { Button } from "@/components/ui/button";

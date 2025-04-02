@@ -2,21 +2,23 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddCategoryForm } from "@/components/admin/add-category-form";
-import { mockDb } from "@/lib/mockDb";
+import { CategoryService } from "@/services/category-service";
 import { RankingCategory } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 
 interface CategoryManagementProps {
   onDataChange: () => void;
 }
 
 export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
-  const [categories, setCategories] = useState<RankingCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => await CategoryService.getAll(),
+  });
 
-  useEffect(() => {
-    setCategories(mockDb.rankingCategories.getAll());
-    setIsLoading(false);
-  }, []);
+  const handleCategoryAdded = () => {
+    onDataChange();
+  };
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
@@ -28,7 +30,7 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AddCategoryForm onSuccess={onDataChange} />
+          <AddCategoryForm onSuccess={handleCategoryAdded} />
         </CardContent>
       </Card>
       

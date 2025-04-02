@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { mockDb } from "@/lib/mockDb";
+import { CategoryService } from "@/services/category-service";
 import { useAuth } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -48,19 +48,23 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
     setIsSubmitting(true);
     
     try {
-      const newCategory = mockDb.rankingCategories.create({
+      const newCategory = await CategoryService.create({
         name: values.name,
         description: values.description,
-        admin_owner_id: user.id // Updated from adminOwnerId
+        admin_owner_id: user.id
       });
       
-      toast({
-        title: "Category added",
-        description: `${values.name} category has been added successfully.`
-      });
-      
-      form.reset();
-      onSuccess();
+      if (newCategory) {
+        toast({
+          title: "Category added",
+          description: `${values.name} category has been added successfully.`
+        });
+        
+        form.reset();
+        onSuccess();
+      } else {
+        throw new Error("Failed to add category");
+      }
     } catch (error) {
       console.error("Failed to add category:", error);
       toast({
