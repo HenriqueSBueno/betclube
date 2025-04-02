@@ -149,25 +149,21 @@ export function RankingTest({ categories }: RankingTestProps) {
         }),
       });
       
-      // Check response status first
+      const responseText = await response.text();
+      addLog(`API raw response: ${responseText || 'Empty response'}`);
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        addLog(`API error status ${response.status}: ${errorText}`);
-        toast.error(`API error: ${response.statusText}`);
-        setResult(`Error ${response.status}: ${errorText}`);
+        addLog(`API error status ${response.status}: ${responseText || 'No error details'}`);
+        toast.error(`API error: ${response.status} ${response.statusText}`);
+        setResult(`Error ${response.status}: ${responseText || 'No response data'}`);
         return;
       }
-      
-      // Parse the response as JSON if it's valid
-      const responseText = await response.text();
       
       if (!responseText) {
         addLog('API returned empty response');
         setResult('Empty response from API');
         return;
       }
-      
-      addLog(`API raw response: ${responseText}`);
       
       try {
         const responseData = JSON.parse(responseText);

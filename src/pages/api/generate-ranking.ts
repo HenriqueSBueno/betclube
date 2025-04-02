@@ -41,25 +41,23 @@ export default async function handler(req, res) {
 
     console.log(`API: Generating ranking for category ${category_id} with ${site_count} sites, min votes: ${min_votes}, max votes: ${max_votes}`);
 
-    // Call the Supabase edge function
-    const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
-      body: {
-        category_id,
-        site_count,
-        min_votes,
-        max_votes
-      }
+    // Using direct database function instead of edge function to ensure reliability
+    const { data, error } = await supabase.rpc('generate_daily_ranking', {
+      category_id,
+      site_count,
+      min_votes,
+      max_votes
     });
 
     if (error) {
-      console.error('Error invoking edge function:', error);
+      console.error('Error calling database function:', error);
       return res.status(500).json({ message: 'Failed to generate ranking', error: error.message });
     }
 
-    console.log('Edge function response:', data);
+    console.log('Database function response:', data);
     
     // Return the ranking ID with a proper JSON response
-    return res.status(200).json(data);
+    return res.status(200).json({ ranking_id: data });
   } catch (error) {
     console.error('Exception in generate-ranking API route:', error);
     return res.status(500).json({ 
@@ -78,23 +76,21 @@ export async function generateRanking(requestBody: GenerateRankingRequest): Prom
       return { message: 'Category ID is required' };
     }
 
-    // Use the Supabase edge function
-    const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
-      body: {
-        category_id,
-        site_count,
-        min_votes,
-        max_votes
-      }
+    // Using direct database function instead of edge function to ensure reliability
+    const { data, error } = await supabase.rpc('generate_daily_ranking', {
+      category_id,
+      site_count,
+      min_votes,
+      max_votes
     });
 
     if (error) {
-      console.error('Error invoking edge function:', error);
+      console.error('Error calling database function:', error);
       return { message: 'Failed to generate ranking', error: error.message };
     }
 
     // Return the ranking ID
-    return data;
+    return { ranking_id: data };
   } catch (error) {
     console.error('Exception in generate-ranking function:', error);
     return { 
