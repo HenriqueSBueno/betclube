@@ -16,6 +16,8 @@ interface SiteCardProps {
   hasVotedForSite: boolean;
   onVote: (siteId: string) => void;
   isAuthenticated: boolean;
+  remainingVotes: number;
+  rankingId: string;
 }
 
 export function SiteCard({
@@ -26,6 +28,8 @@ export function SiteCard({
   hasVotedForSite,
   onVote,
   isAuthenticated,
+  remainingVotes,
+  rankingId,
 }: SiteCardProps) {
   return (
     <Card 
@@ -39,16 +43,27 @@ export function SiteCard({
               #{index + 1}
             </div>
             {isAuthenticated ? (
-              <Button
-                size="sm"
-                className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                onClick={() => onVote(rankedSite.siteId)}
-                disabled={hasVotedForSite}
-                title={hasVotedForSite ? "Você já votou neste site hoje" : "Votar neste site"}
-              >
-                <ArrowUp className="h-4 w-4 mr-1" />
-                Votar
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    onClick={() => onVote(rankedSite.siteId)}
+                    disabled={hasVotedForSite || remainingVotes <= 0}
+                    title={hasVotedForSite ? "Você já votou neste site hoje" : remainingVotes <= 0 ? "Você já usou todos os seus votos para esta lista hoje" : "Votar neste site"}
+                  >
+                    <ArrowUp className="h-4 w-4 mr-1" />
+                    Votar
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className={`${hasVotedForSite ? 'bg-green-600' : remainingVotes <= 0 ? 'bg-amber-600' : 'bg-primary'} text-primary-foreground`}>
+                  {hasVotedForSite 
+                    ? "Você já votou neste site hoje"
+                    : remainingVotes <= 0 
+                      ? "Você já usou todos os seus votos para esta lista hoje" 
+                      : `Votar (${remainingVotes} ${remainingVotes === 1 ? 'voto restante' : 'votos restantes'})`}
+                </TooltipContent>
+              </Tooltip>
             ) : (
               <Tooltip>
                 <TooltipTrigger asChild>
