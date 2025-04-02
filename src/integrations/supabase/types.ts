@@ -291,6 +291,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_rankings_by_category: {
+        Args: {
+          p_category_id: string
+        }
+        Returns: undefined
+      }
       generate_daily_ranking:
         | {
             Args: {

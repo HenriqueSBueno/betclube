@@ -36,10 +36,10 @@ export function SiteCard({
       key={rankedSite.siteId} 
       className={`overflow-hidden ranking-card-hover transition-all ${isTopThree ? 'border-primary border-2 shadow-lg' : ''}`}
     >
-      <CardContent className={`p-0 ${isTopThree ? 'bg-primary/10' : ''}`}>
+      <CardContent className={`p-0 ${isTopThree ? 'bg-amber-50' : ''}`}>
         <div className="flex items-center p-4 md:p-6">
           <div className="flex-shrink-0 mr-4 text-center">
-            <div className={`text-2xl font-bold mb-1 ${isTopThree ? 'text-primary' : 'text-primary'}`}>
+            <div className={`text-2xl font-bold mb-1 ${isTopThree ? 'text-amber-500' : 'text-primary'}`}>
               #{index + 1}
             </div>
             {isAuthenticated ? (
@@ -47,7 +47,7 @@ export function SiteCard({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
-                    className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    className={`vote-button bg-amber-400 hover:bg-amber-500 text-black ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                     onClick={() => onVote(rankedSite.siteId)}
                     disabled={hasVotedForSite || remainingVotes <= 0}
                     title={hasVotedForSite ? "Você já votou neste site hoje" : remainingVotes <= 0 ? "Você já usou todos os seus votos para esta lista hoje" : "Votar neste site"}
@@ -69,7 +69,7 @@ export function SiteCard({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
-                    className="vote-button"
+                    className="vote-button bg-amber-400 hover:bg-amber-500 text-black"
                     onClick={() => onVote(rankedSite.siteId)}
                   >
                     <ArrowUp className="h-4 w-4 mr-1" />
@@ -90,7 +90,7 @@ export function SiteCard({
                     {rankedSite.site.name}
                   </h3>
                   {isTopThree && (
-                    <Badge variant="default" className="animate-pulse bg-primary/80">
+                    <Badge variant="default" className="animate-pulse bg-amber-400 text-black">
                       <TrendingUp className="h-3 w-3 mr-1" /> Trending
                     </Badge>
                   )}
@@ -109,7 +109,7 @@ export function SiteCard({
                   <Button 
                     variant={isTopThree ? "default" : "outline"} 
                     size="sm"
-                    className="group"
+                    className={`group ${isTopThree ? 'bg-amber-400 hover:bg-amber-500 text-black' : ''}`}
                   >
                     {isTopThree && (
                       <Flame 
@@ -129,7 +129,7 @@ export function SiteCard({
               </div>
               <Progress
                 value={(rankedSite.votes / maxVotes) * 100}
-                className={`h-2 ${isTopThree ? 'bg-muted/50' : ''}`}
+                className={`h-2 ${isTopThree ? 'bg-amber-200' : 'bg-muted/50'}`}
               />
             </div>
           </div>
