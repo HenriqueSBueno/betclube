@@ -8,6 +8,7 @@ import { UserManagement } from "@/components/admin/user-management";
 import { SiteManagement } from "@/components/admin/site-management";
 import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
+import { TestSiteAdd } from "@/components/admin/test-site-add";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryService } from "@/services/category-service";
@@ -88,6 +89,7 @@ const AdminDashboard = () => {
           
           <TabsContent value="sites">
             <SiteManagement categories={categories} onDataChange={handleDataChange} />
+            <TestSiteAdd />
           </TabsContent>
           
           <TabsContent value="categories">

@@ -131,9 +131,22 @@ export const bettingSiteService = {
   },
   
   create: async (site: Omit<BettingSite, 'id'>): Promise<BettingSite> => {
-    console.log("[BettingSiteService] Creating site:", site);
+    console.log("[BettingSiteService] Creating site:", JSON.stringify(site, null, 2));
+    
+    // Verificar se todos os campos obrigatórios estão presentes
+    if (!site.name || !site.url || !site.description || !site.category || !site.adminOwnerId) {
+      console.error("[BettingSiteService] Missing required fields", {
+        name: !!site.name,
+        url: !!site.url,
+        description: !!site.description,
+        category: !!site.category,
+        adminOwnerId: !!site.adminOwnerId
+      });
+      throw new Error("Missing required fields");
+    }
+    
     try {
-      console.log("[BettingSiteService] Preparing Supabase data:", {
+      const supabaseData = {
         name: site.name,
         url: site.url,
         description: site.description,
@@ -143,27 +156,29 @@ export const bettingSiteService = {
         admin_owner_id: site.adminOwnerId,
         commission: site.commission || null,
         ltv: site.ltv || null
-      });
+      };
+      
+      console.log("[BettingSiteService] Preparing Supabase data:", JSON.stringify(supabaseData, null, 2));
+      
+      // Verificar se a conexão com o Supabase está ativa
+      const { error: pingError } = await supabase.from('betting_sites').select('count(*)');
+      if (pingError) {
+        console.error('[BettingSiteService] Supabase connection check failed:', pingError);
+      } else {
+        console.log('[BettingSiteService] Supabase connection check passed');
+      }
       
       const { data, error } = await supabase
         .from('betting_sites')
-        .insert({
-          name: site.name,
-          url: site.url,
-          description: site.description,
-          category: site.category,
-          logo_url: site.logoUrl || null,
-          registration_date: site.registrationDate.toISOString(),
-          admin_owner_id: site.adminOwnerId,
-          commission: site.commission || null,
-          ltv: site.ltv || null
-        })
+        .insert(supabaseData)
         .select()
         .single();
       
       if (error) {
         console.error('[BettingSiteService] Error creating betting site in Supabase:', error);
+        console.log('[BettingSiteService] Error details:', JSON.stringify(error, null, 2));
         console.log('[BettingSiteService] Using fallback with mock data');
+        
         // Fallback to mock data
         const newSite = { ...site, id: String(bettingSites.length + 1) };
         bettingSites.push(newSite);
@@ -186,6 +201,8 @@ export const bettingSiteService = {
       };
     } catch (error) {
       console.error('[BettingSiteService] Error in create:', error);
+      console.error('[BettingSiteService] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
       // Fallback to mock data
       const newSite = { ...site, id: String(bettingSites.length + 1) };
       bettingSites.push(newSite);
