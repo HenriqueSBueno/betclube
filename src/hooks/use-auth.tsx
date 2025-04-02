@@ -8,5 +8,15 @@ export const useAuth = (): AuthContextType => {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  
+  // Função auxiliar para verificar se o usuário é administrador
+  const isAdmin = (): boolean => {
+    return !!context.user?.role && context.user.role === 'admin';
+  };
+  
+  // Retornando o contexto original juntamente com a nova função isAdmin
+  return {
+    ...context,
+    isAdmin
+  };
 };

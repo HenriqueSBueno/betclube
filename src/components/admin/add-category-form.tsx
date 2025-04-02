@@ -32,7 +32,7 @@ interface AddCategoryFormProps {
 
 export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +55,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
       return;
     }
     
-    if (user.role !== "admin") {
+    if (!isAdmin()) {
       setError("Apenas administradores podem adicionar categorias.");
       toast({
         variant: "destructive",

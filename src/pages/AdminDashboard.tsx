@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -10,17 +10,34 @@ import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { CategoryService } from "@/services/category-service";
+import { RankingCategory } from "@/types";
 
 const AdminDashboard = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [categories, setCategories] = useState<RankingCategory[]>([]);
 
   // Função para forçar atualização de dados quando algo muda
   const handleDataChange = () => {
     console.log("Atualizando dados em AdminDashboard");
     setRefreshKey(prevKey => prevKey + 1);
   };
+
+  // Carregar categorias quando o componente for montado
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const fetchedCategories = await CategoryService.getAll();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Erro ao buscar categorias:", error);
+      }
+    };
+
+    fetchCategories();
+  }, [refreshKey]);
 
   if (isLoading) {
     return (
@@ -30,7 +47,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated || !isAdmin()) {
     toast({
       title: "Acesso negado",
       description: "Você precisa estar logado como administrador para acessar esta página.",
@@ -60,7 +77,7 @@ const AdminDashboard = () => {
           </TabsList>
           
           <TabsContent value="sites">
-            <SiteManagement onDataChange={handleDataChange} />
+            <SiteManagement categories={categories} onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="categories">
@@ -68,7 +85,7 @@ const AdminDashboard = () => {
           </TabsContent>
           
           <TabsContent value="rankings">
-            <RankingsManagement onDataChange={handleDataChange} />
+            <RankingsManagement categories={categories} onDataChange={handleDataChange} />
           </TabsContent>
           
           <TabsContent value="users">
