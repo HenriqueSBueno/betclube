@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUp, TrendingUp, Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RankedSite } from "@/types";
 
 interface SiteCardProps {
@@ -37,16 +38,34 @@ export function SiteCard({
             <div className={`text-2xl font-bold mb-1 ${isTopThree ? 'text-primary' : 'text-primary'}`}>
               #{index + 1}
             </div>
-            <Button
-              size="sm"
-              className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
-              onClick={() => onVote(rankedSite.siteId)}
-              disabled={!isAuthenticated || hasVotedForSite}
-              title={!isAuthenticated ? "Faça login para votar" : hasVotedForSite ? "Você já votou neste site hoje" : "Votar neste site"}
-            >
-              <ArrowUp className="h-4 w-4 mr-1" />
-              Votar
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                size="sm"
+                className={`vote-button ${hasVotedForSite ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                onClick={() => onVote(rankedSite.siteId)}
+                disabled={hasVotedForSite}
+                title={hasVotedForSite ? "Você já votou neste site hoje" : "Votar neste site"}
+              >
+                <ArrowUp className="h-4 w-4 mr-1" />
+                Votar
+              </Button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="vote-button"
+                    onClick={() => onVote(rankedSite.siteId)}
+                  >
+                    <ArrowUp className="h-4 w-4 mr-1" />
+                    Votar
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-primary text-primary-foreground">
+                  <p>Faça login para votar</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
