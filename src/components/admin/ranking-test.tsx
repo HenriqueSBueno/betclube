@@ -92,6 +92,47 @@ export function RankingTest({ categories }: RankingTestProps) {
     addLog("Starting edge function test...");
 
     try {
+      addLog(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
+      
+      // Call the Supabase edge function directly
+      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
+        body: { 
+          category_id: selectedCategoryId,
+          site_count: parseInt(siteCount, 10),
+          min_votes: parseInt(minVotes, 10),
+          max_votes: parseInt(maxVotes, 10)
+        }
+      });
+      
+      if (error) {
+        addLog(`Edge function error: ${error.message}`);
+        toast.error(`Edge function error: ${error.message}`);
+        setResult(JSON.stringify({ error }, null, 2));
+      } else {
+        addLog(`Edge function call successful. Result: ${JSON.stringify(data)}`);
+        toast.success("Edge function call successful!");
+        setResult(JSON.stringify(data, null, 2));
+      }
+    } catch (error) {
+      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
+      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testApiEndpoint = async () => {
+    if (!selectedCategoryId) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    setIsLoading(true);
+    setResult(null);
+    addLog("Starting API endpoint test...");
+
+    try {
       addLog(`Calling generate-ranking API with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
       
       // Call the API endpoint
@@ -107,59 +148,36 @@ export function RankingTest({ categories }: RankingTestProps) {
           max_votes: parseInt(maxVotes, 10)
         }),
       });
-
-      const responseData = await response.json();
       
+      // Check response status first
       if (!response.ok) {
-        addLog(`API error: ${responseData.message || response.statusText}`);
-        toast.error(`API error: ${responseData.message || response.statusText}`);
-      } else {
+        const errorText = await response.text();
+        addLog(`API error status ${response.status}: ${errorText}`);
+        toast.error(`API error: ${response.statusText}`);
+        setResult(`Error ${response.status}: ${errorText}`);
+        return;
+      }
+      
+      // Parse the response as JSON if it's valid
+      const responseText = await response.text();
+      
+      if (!responseText) {
+        addLog('API returned empty response');
+        setResult('Empty response from API');
+        return;
+      }
+      
+      addLog(`API raw response: ${responseText}`);
+      
+      try {
+        const responseData = JSON.parse(responseText);
         addLog(`API call successful. Result: ${JSON.stringify(responseData)}`);
         toast.success("API call successful!");
+        setResult(JSON.stringify(responseData, null, 2));
+      } catch (parseError) {
+        addLog(`Error parsing API response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+        setResult(`Invalid JSON response: ${responseText}`);
       }
-      
-      setResult(JSON.stringify(responseData, null, 2));
-    } catch (error) {
-      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
-      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
-      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const testSupabaseFunction = async () => {
-    if (!selectedCategoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    setIsLoading(true);
-    setResult(null);
-    addLog("Starting Supabase function test...");
-
-    try {
-      addLog(`Invoking generate_daily_ranking with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
-      
-      // Use Supabase Functions API
-      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
-        body: { 
-          category_id: selectedCategoryId,
-          site_count: parseInt(siteCount, 10),
-          min_votes: parseInt(minVotes, 10),
-          max_votes: parseInt(maxVotes, 10)
-        }
-      });
-      
-      if (error) {
-        addLog(`Edge function error: ${error.message}`);
-        toast.error(`Edge function error: ${error.message}`);
-      } else {
-        addLog(`Edge function call successful. Result: ${JSON.stringify(data)}`);
-        toast.success("Edge function call successful!");
-      }
-      
-      setResult(JSON.stringify({ data, error }, null, 2));
     } catch (error) {
       addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
       toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
@@ -229,10 +247,10 @@ export function RankingTest({ categories }: RankingTestProps) {
             <Button onClick={testDirectFunction} disabled={isLoading}>
               {isLoading ? "Testing..." : "Test Database Function"}
             </Button>
-            <Button onClick={testEdgeFunction} variant="secondary" disabled={isLoading}>
+            <Button onClick={testApiEndpoint} variant="secondary" disabled={isLoading}>
               {isLoading ? "Testing..." : "Test API Endpoint"}
             </Button>
-            <Button onClick={testSupabaseFunction} variant="outline" disabled={isLoading}>
+            <Button onClick={testEdgeFunction} variant="outline" disabled={isLoading}>
               {isLoading ? "Testing..." : "Test Edge Function"}
             </Button>
           </div>
