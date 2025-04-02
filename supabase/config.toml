@@ -15,3 +15,6 @@ port = 54323
 
 [functions.increment_site_votes]
 verify_jwt = true
+
+[functions.generate_daily_ranking]
+verify_jwt = true

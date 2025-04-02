@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DailyRanking, RankedSite, BettingSite, RankingCategory, RankingConfig } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -46,7 +47,7 @@ export class RankingsService {
         .eq('category_id', categoryId)
         .maybeSingle();
       
-      const configData: RankingConfig = {
+      const configData = {
         category_id: categoryId,
         site_count: siteCount,
         min_votes: minVotes,
@@ -64,7 +65,7 @@ export class RankingsService {
           .single();
           
         if (error) throw error;
-        result = data as RankingConfig;
+        result = data;
       } else {
         const { data, error } = await supabase
           .from('ranking_configs')
@@ -73,10 +74,10 @@ export class RankingsService {
           .single();
           
         if (error) throw error;
-        result = data as RankingConfig;
+        result = data;
       }
       
-      return result;
+      return result as RankingConfig;
     } catch (error) {
       console.error("Erro ao salvar configuração de ranking:", error);
       throw error;
@@ -196,19 +197,29 @@ export class RankingsService {
   static async regenerateRanking(categoryId: string, siteCount: number, voteRange: { minVotes: number, maxVotes: number }) {
     try {
       // Primeiro, atualizamos a configuração
-      const config = await this.upsertConfig(categoryId, siteCount, voteRange.minVotes, voteRange.maxVotes);
+      await this.upsertConfig(categoryId, siteCount, voteRange.minVotes, voteRange.maxVotes);
       
-      // Chama a função do Supabase para gerar o ranking
-      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', { 
-        body: { 
-          category_id: categoryId,
-          site_count: siteCount,
-          min_votes: voteRange.minVotes,
-          max_votes: voteRange.maxVotes
-        }
+      console.log("Calling generate_daily_ranking with parameters:", {
+        category_id: categoryId,
+        site_count: siteCount,
+        min_votes: voteRange.minVotes,
+        max_votes: voteRange.maxVotes
       });
       
-      if (error) throw error;
+      // Usar diretamente a função do banco de dados em vez da edge function que está falhando
+      const { data, error } = await supabase.rpc('generate_daily_ranking', {
+        category_id: categoryId,
+        site_count: siteCount,
+        min_votes: voteRange.minVotes,
+        max_votes: voteRange.maxVotes
+      });
+      
+      if (error) {
+        console.error("Error from RPC call:", error);
+        throw error;
+      }
+      
+      console.log("RPC call succeeded with result:", data);
       
       // Retorna o ranking atualizado
       return this.getRankingByCategory(categoryId);

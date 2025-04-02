@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RankingCategory } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   categoryId: z.string().min(1, "Selecione uma categoria."),
@@ -62,41 +63,36 @@ export function GenerateRankingsForm({ categories, onRankingGenerated }: Generat
       const minVotesNum = Number(values.minVotes);
       const maxVotesNum = Number(values.maxVotes);
       
-      const votesRange: number[] = [minVotesNum, maxVotesNum];
-      
-      // Use o array tipado em vez da expressão problemática
+      // Log dos valores para depuração
       console.log("Valores para geração de ranking:", {
         categoryId: values.categoryId,
         siteCount: Number(values.siteCount),
-        votesRange
+        minVotes: minVotesNum,
+        maxVotes: maxVotesNum
       });
 
-      const response = await fetch('/api/generate-ranking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category_id: values.categoryId,
-          site_count: Number(values.siteCount),
-          min_votes: Number(values.minVotes),
-          max_votes: Number(values.maxVotes),
-        }),
+      // Call the database function directly using RPC
+      const { data, error } = await supabase.rpc('generate_daily_ranking', {
+        category_id: values.categoryId,
+        site_count: Number(values.siteCount),
+        min_votes: minVotesNum,
+        max_votes: maxVotesNum
       });
 
-      if (response.ok) {
+      if (error) {
+        console.error("Erro ao gerar ranking via RPC:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao gerar ranking",
+          description: error.message || "Ocorreu um erro ao gerar o ranking.",
+        });
+      } else {
+        console.log("Ranking gerado com sucesso:", data);
         toast({
           title: "Ranking gerado",
           description: "O ranking foi gerado com sucesso!",
         });
         onRankingGenerated();
-      } else {
-        const errorData = await response.json();
-        toast({
-          variant: "destructive",
-          title: "Erro ao gerar ranking",
-          description: errorData.message || "Ocorreu um erro ao gerar o ranking.",
-        });
       }
     } catch (error) {
       console.error("Erro ao gerar ranking:", error);
