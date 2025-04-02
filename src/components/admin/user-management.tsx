@@ -16,11 +16,6 @@ interface UserProfile {
   created_at: string;
 }
 
-interface AdminUser {
-  id: string;
-  email?: string;
-}
-
 export function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,46 +28,19 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // First get all profiles from the database
-      const { data: profiles, error: profilesError } = await supabase
+      // Fetch profiles from the database with emails
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, role, created_at');
+        .select('id, email, role, created_at');
         
-      if (profilesError) throw profilesError;
+      if (error) throw error;
       
       if (!profiles) {
         setUsers([]);
         return;
       }
       
-      // Now get auth users via the API, this might require admin rights
-      // We'll handle potential failures gracefully
-      let authUsers: AdminUser[] = [];
-      try {
-        const { data, error } = await supabase.auth.admin.listUsers();
-        if (!error && data?.users) {
-          authUsers = data.users.map(user => ({
-            id: user.id,
-            email: user.email
-          }));
-        }
-      } catch (e) {
-        console.error("Error fetching auth users:", e);
-        // Continue with profiles only if auth users fail
-      }
-      
-      // Combine the data, handling the case where auth users might be missing
-      const combinedUsers = profiles.map((profile): UserProfile => {
-        const authUser = authUsers.find((user) => user.id === profile.id);
-        return {
-          id: profile.id,
-          email: authUser?.email || 'Email não disponível',
-          role: profile.role,
-          created_at: profile.created_at,
-        };
-      });
-      
-      setUsers(combinedUsers);
+      setUsers(profiles as UserProfile[]);
     } catch (error: any) {
       console.error('Erro ao buscar usuários:', error);
       toast({
@@ -115,7 +83,7 @@ export function UserManagement() {
   };
   
   const getUserInitials = (email: string) => {
-    return email.charAt(0).toUpperCase();
+    return email ? email.charAt(0).toUpperCase() : "U";
   };
   
   return (
@@ -153,7 +121,7 @@ export function UserManagement() {
                         </AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.email || 'Email não disponível'}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">
                         {user.role === 'admin' ? (

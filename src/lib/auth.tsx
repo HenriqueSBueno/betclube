@@ -4,8 +4,18 @@ import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 
+interface UserProfile {
+  id: string;
+  role: string;
+  email: string;
+}
+
+interface AuthUser extends User {
+  role?: string;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -16,16 +26,52 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Function to fetch user profile and merge role with user
+  const fetchUserProfile = async (userId: string, userObj: User) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role, email')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return userObj;
+      }
+      
+      return { 
+        ...userObj, 
+        role: data?.role || 'user' 
+      } as AuthUser;
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      return userObj;
+    }
+  };
 
   useEffect(() => {
     // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          // Defer profile fetching to avoid auth state deadlock
+          setTimeout(async () => {
+            const enrichedUser = await fetchUserProfile(
+              currentSession.user.id, 
+              currentSession.user
+            );
+            setUser(enrichedUser);
+          }, 0);
+        } else {
+          setUser(null);
+        }
         
         if (event === 'SIGNED_IN') {
           toast({
@@ -44,9 +90,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        const enrichedUser = await fetchUserProfile(
+          currentSession.user.id, 
+          currentSession.user
+        );
+        setUser(enrichedUser);
+      } else {
+        setUser(null);
+      }
+      
       setIsLoading(false);
     });
 

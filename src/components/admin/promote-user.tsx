@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-// Define the type for clarity
-type ProfileData = {
+interface UserProfile {
   id: string;
+  email: string;
+  role: string;
 }
 
 export function PromoteUser() {
@@ -23,26 +24,38 @@ export function PromoteUser() {
     setLoading(true);
     
     try {
-      // Get user data by looking up the email directly in the profiles
+      // Get user profile by email
       const { data, error: userError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('email', email);
+        .select('id, email, role')
+        .eq('email', email)
+        .maybeSingle();
       
-      // Type assertion to avoid deep inference issues
-      const users = data as ProfileData[] | null;
-      
-      if (userError || !users || users.length === 0) {
-        throw new Error(userError?.message || "Usuário não encontrado");
+      if (userError) {
+        throw new Error(userError.message);
       }
       
-      const userId = users[0].id;
+      if (!data) {
+        throw new Error("Usuário não encontrado");
+      }
       
-      // Atualizar o perfil para admin
+      const userProfile = data as UserProfile;
+      
+      // Check if already admin
+      if (userProfile.role === 'admin') {
+        toast({
+          title: "Usuário já é administrador",
+          description: `${email} já tem permissões de administrador`,
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Update the profile role to admin
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ role: 'admin' })
-        .eq('id', userId);
+        .eq('id', userProfile.id);
       
       if (updateError) throw updateError;
       
