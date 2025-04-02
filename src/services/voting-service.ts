@@ -47,11 +47,12 @@ export class VotingService {
     }
     
     try {
-      // Chamar a função RPC para incrementar votos no Supabase
-      await supabase.rpc('increment_site_votes', {
-        p_ranking_id: rankingId,
-        p_site_id: siteId
+      // Chamar a função para incrementar votos no Supabase
+      const { data, error } = await supabase.functions.invoke('increment_site_votes', {
+        body: { rankingId, siteId }
       });
+      
+      if (error) throw new Error(error.message);
       
       // Salvar o voto localmente para controle de limite por usuário
       const today = new Date().toISOString().split('T')[0];
@@ -88,5 +89,32 @@ export class VotingService {
   // Obter chave para identificar voto único (site + ranking)
   static getSiteVoteKey(siteId: string, rankingId: string): string {
     return `${siteId}_${rankingId}`;
+  }
+
+  // Add the missing resetVotesForRanking method
+  static async resetVotesForRanking(rankingId: string): Promise<void> {
+    // Reset votes in localStorage for the current user's browser
+    const allKeys = Object.keys(localStorage);
+    const voteKeys = allKeys.filter(key => key.startsWith('userVotes_'));
+    
+    voteKeys.forEach(key => {
+      const storedVotes = localStorage.getItem(key);
+      if (storedVotes) {
+        const votedSiteIds = JSON.parse(storedVotes);
+        const updatedVotes = { ...votedSiteIds };
+        
+        // Remove all votes for this ranking
+        Object.keys(updatedVotes).forEach(voteKey => {
+          // Each voteKey is in the format "siteId_rankingId"
+          const parts = voteKey.split('_');
+          if (parts.length === 2 && parts[1] === rankingId) {
+            delete updatedVotes[voteKey];
+          }
+        });
+        
+        // Store the updated votes back to localStorage
+        localStorage.setItem(key, JSON.stringify(updatedVotes));
+      }
+    });
   }
 }

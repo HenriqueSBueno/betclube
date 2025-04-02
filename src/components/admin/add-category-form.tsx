@@ -51,7 +51,7 @@ export function AddCategoryForm({ onSuccess }: AddCategoryFormProps) {
       const newCategory = mockDb.rankingCategories.create({
         name: values.name,
         description: values.description,
-        adminOwnerId: user.id
+        admin_owner_id: user.id // Updated from adminOwnerId
       });
       
       toast({

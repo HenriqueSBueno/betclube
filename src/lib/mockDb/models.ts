@@ -1,3 +1,4 @@
+
 import { User, BettingSite, RankingCategory, DailyRanking, Vote, SharedRanking } from '@/types';
 
 // Mock data collections
@@ -176,19 +177,19 @@ export const rankingCategories: RankingCategory[] = [
     id: '1',
     name: 'Sports',
     description: 'Best sports betting sites',
-    adminOwnerId: '1'
+    admin_owner_id: '1' // Updated from adminOwnerId
   },
   {
     id: '2',
     name: 'Casino',
     description: 'Top online casinos',
-    adminOwnerId: '1'
+    admin_owner_id: '1' // Updated from adminOwnerId
   },
   {
     id: '3',
     name: 'Poker',
     description: 'Leading poker platforms',
-    adminOwnerId: '1'
+    admin_owner_id: '1' // Updated from adminOwnerId
   }
 ];
 

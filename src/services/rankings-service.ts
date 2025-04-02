@@ -1,18 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { DailyRanking, RankedSite, BettingSite, RankingCategory } from "@/types";
+import { DailyRanking, RankedSite, BettingSite, RankingCategory, RankingConfig } from "@/types";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-
-// Interface para representar as configurações de ranking
-interface RankingConfig {
-  id?: string;
-  category_id: string;
-  site_count: number;
-  min_votes: number;
-  max_votes: number;
-  last_modified?: string;
-}
 
 export class RankingsService {
   // Buscar todas as configurações de ranking
@@ -210,11 +199,13 @@ export class RankingsService {
       const config = await this.upsertConfig(categoryId, siteCount, voteRange.minVotes, voteRange.maxVotes);
       
       // Chama a função do Supabase para gerar o ranking
-      const { data, error } = await supabase.rpc('generate_daily_ranking', { 
-        category_id: categoryId,
-        site_count: siteCount,
-        min_votes: voteRange.minVotes,
-        max_votes: voteRange.maxVotes
+      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', { 
+        body: { 
+          category_id: categoryId,
+          site_count: siteCount,
+          min_votes: voteRange.minVotes,
+          max_votes: voteRange.maxVotes
+        }
       });
       
       if (error) throw error;

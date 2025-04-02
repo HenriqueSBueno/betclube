@@ -1,3 +1,4 @@
+
 export type UserRole = "admin" | "user";
 
 export interface User {
@@ -25,7 +26,7 @@ export interface RankingCategory {
   id: string;
   name: string;
   description: string;
-  admin_owner_id: string;
+  admin_owner_id: string; // Changed from adminOwnerId to match database column name
 }
 
 export interface DailyRanking {
@@ -63,4 +64,14 @@ export interface SharedRanking {
   uniqueToken: string;
   shareDate: Date;
   expirationDate: Date;
+}
+
+// Add interface for RankingConfig to match database
+export interface RankingConfig {
+  id?: string;
+  category_id: string;
+  site_count: number;
+  min_votes: number;
+  max_votes: number;
+  last_modified?: string;
 }

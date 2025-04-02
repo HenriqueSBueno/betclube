@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { RankingCategory } from "@/types";
+import { RankingCategory, RankingConfig } from "@/types";
 import { ArrowDown } from "lucide-react";
 import { VotingService } from "@/services/voting-service";
 import { RankingsService } from "@/services/rankings-service";
@@ -33,12 +33,12 @@ export function GenerateRankingsForm({
   const [minVotes, setMinVotes] = useState("0");
   const [maxVotes, setMaxVotes] = useState("100");
   
-  // Buscar configuração atual quando a categoria é selecionada
+  // Buscar configuração atual quando a categoria é selecionada - fixed the useQuery hook
   const { data: currentConfig } = useQuery({
     queryKey: ['rankingConfig', selectedCategory],
     queryFn: () => RankingsService.getConfig(selectedCategory),
     enabled: !!selectedCategory,
-    onSuccess: (data) => {
+    onSettled: (data) => {
       if (data) {
         setTotalSites(data.site_count.toString());
         setMinVotes(data.min_votes.toString());
@@ -148,7 +148,7 @@ export function GenerateRankingsForm({
           <p className="font-medium mb-1">Current Configuration:</p>
           <p>Sites: {currentConfig.site_count}</p>
           <p>Votes Range: {currentConfig.min_votes} - {currentConfig.max_votes}</p>
-          <p>Last Modified: {new Date(currentConfig.last_modified).toLocaleString()}</p>
+          <p>Last Modified: {new Date(currentConfig.last_modified || '').toLocaleString()}</p>
         </div>
       )}
       
