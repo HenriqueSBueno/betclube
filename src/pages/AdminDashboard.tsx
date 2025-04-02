@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
@@ -9,6 +8,7 @@ import { AddSiteForm } from "@/components/admin/add-site-form";
 import { AddCategoryForm } from "@/components/admin/add-category-form";
 import { GenerateRankingsForm } from "@/components/admin/generate-rankings-form";
 import { EditSiteForm } from "@/components/admin/edit-site-form";
+import { UserManagement } from "@/components/admin/user-management";
 import { useAuth } from "@/lib/auth";
 import { RankingCategory, BettingSite, DailyRanking } from "@/types";
 import { mockDb } from "@/lib/mockDb";
@@ -39,7 +39,6 @@ const AdminDashboard = () => {
   const [editingSite, setEditingSite] = useState<BettingSite | null>(null);
   const { toast } = useToast();
   
-  // Load data from mock database
   const loadData = () => {
     setCategories(mockDb.rankingCategories.getAll());
     setSites(mockDb.bettingSites.getAll());
@@ -54,7 +53,6 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated, user]);
 
-  // Handle checkbox selection
   const toggleSiteSelection = (siteId: string) => {
     setSelectedSites(prev => 
       prev.includes(siteId) 
@@ -63,7 +61,6 @@ const AdminDashboard = () => {
     );
   };
 
-  // Handle bulk selection
   const toggleAllSites = () => {
     if (selectedSites.length === sites.length) {
       setSelectedSites([]);
@@ -72,7 +69,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Delete a single site
   const deleteSite = (siteId: string) => {
     try {
       const deletedSite = mockDb.bettingSites.delete(siteId);
@@ -93,7 +89,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Delete multiple sites
   const deleteBulkSites = () => {
     let successCount = 0;
     let failCount = 0;
@@ -120,12 +115,10 @@ const AdminDashboard = () => {
     });
   };
 
-  // Edit site
   const handleEditSite = (site: BettingSite) => {
     setEditingSite(site);
   };
 
-  // Show loading state if auth is still loading
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -134,7 +127,6 @@ const AdminDashboard = () => {
     );
   }
 
-  // Redirect non-admin users
   if (!isAuthenticated || user?.role !== "admin") {
     return <Navigate to="/" />;
   }
@@ -156,6 +148,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="sites">Betting Sites</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="rankings">Rankings</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
           </TabsList>
           
           <TabsContent value="sites">
@@ -383,12 +376,15 @@ const AdminDashboard = () => {
               </Card>
             </div>
           </TabsContent>
+          
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
         </Tabs>
       </main>
       
       <Footer />
       
-      {/* Form de edição de site */}
       {editingSite && (
         <EditSiteForm
           site={editingSite}
