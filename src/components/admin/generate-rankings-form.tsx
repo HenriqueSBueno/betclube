@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { mockDb } from "@/lib/mockDb";
 import { RankingCategory } from "@/types";
 import { ArrowDown } from "lucide-react";
+import { VotingService } from "@/components/rankings/voting-service";
 
 interface GenerateRankingsFormProps {
   categories: RankingCategory[];
@@ -66,6 +67,13 @@ export function GenerateRankingsForm({
     setIsGenerating(true);
     
     try {
+      // Get the existing ranking to reset votes
+      const existingRanking = mockDb.dailyRankings.findByCategory(selectedCategory);
+      if (existingRanking) {
+        // Reset votes for this ranking
+        VotingService.resetVotesForRanking(existingRanking.id);
+      }
+      
       const newRanking = mockDb.dailyRankings.regenerate(
         selectedCategory, 
         sitesCount, 
@@ -77,6 +85,8 @@ export function GenerateRankingsForm({
           title: "Rankings generated",
           description: `New ${newRanking.categoryName} rankings have been generated successfully.`
         });
+        
+        // Call onSuccess to refresh the UI
         onSuccess();
       } else {
         throw new Error("Failed to generate rankings");
@@ -182,7 +192,7 @@ export function GenerateRankingsForm({
       </Button>
       
       <p className="text-sm text-muted-foreground">
-        This will replace the current daily rankings for the selected category with a new random selection.
+        This will replace the current daily rankings for the selected category with a new random selection and reset all user votes.
       </p>
     </div>
   );

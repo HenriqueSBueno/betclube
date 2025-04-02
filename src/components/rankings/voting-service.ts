@@ -76,4 +76,38 @@ export class VotingService {
   static getSiteVoteKey(siteId: string, rankingId: string): string {
     return `${siteId}_${rankingId}`;
   }
+  
+  static resetVotesForRanking(rankingId: string): void {
+    // Reset votes in the mock database
+    const votesToRemove = mockDb.votes.filterByRanking(rankingId);
+    votesToRemove.forEach(vote => {
+      mockDb.votes.delete(vote.id);
+    });
+    
+    // Reset votes in localStorage for all users
+    // Since we don't have access to all users here, we will just remove votes related to this ranking
+    // from localStorage for the current browser
+    const allKeys = Object.keys(localStorage);
+    const voteKeys = allKeys.filter(key => key.startsWith('userVotes_'));
+    
+    voteKeys.forEach(key => {
+      const storedVotes = localStorage.getItem(key);
+      if (storedVotes) {
+        const votedSiteIds = JSON.parse(storedVotes);
+        const updatedVotes = { ...votedSiteIds };
+        
+        // Remove all votes for this ranking
+        Object.keys(updatedVotes).forEach(voteKey => {
+          // Each voteKey is in the format "siteId_rankingId"
+          const parts = voteKey.split('_');
+          if (parts.length === 2 && parts[1] === rankingId) {
+            delete updatedVotes[voteKey];
+          }
+        });
+        
+        // Store the updated votes back to localStorage
+        localStorage.setItem(key, JSON.stringify(updatedVotes));
+      }
+    });
+  }
 }

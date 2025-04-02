@@ -1,3 +1,4 @@
+
 import { User, BettingSite, RankingCategory, DailyRanking, Vote, SharedRanking, UserRole, RankedSite } from '@/types';
 
 // Mock users
@@ -367,6 +368,16 @@ export const mockDb = {
       }
       
       return newVote;
+    },
+    filterByRanking: (rankingId: string) => 
+      votes.filter(vote => vote.rankingId === rankingId),
+    delete: (id: string) => {
+      const index = votes.findIndex(vote => vote.id === id);
+      if (index !== -1) {
+        const deleted = votes.splice(index, 1);
+        return deleted[0];
+      }
+      return null;
     }
   },
   
