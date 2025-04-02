@@ -46,8 +46,12 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
     }
   };
   
+  // Filter categories for the selected category
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
   const categoryRanking = rankings.find(r => r.categoryId === selectedCategoryId);
+  
+  // Filter the categories for the currently selected one
+  const filteredCategories = selectedCategory ? [selectedCategory] : [];
   
   return (
     <div className="grid gap-6">
@@ -113,8 +117,8 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
               </CardHeader>
               <CardContent>
                 <GenerateRankingsForm 
-                  categoryId={selectedCategoryId}
-                  onSuccess={handleGenerationSuccess}
+                  categories={filteredCategories}
+                  onRankingGenerated={handleGenerationSuccess}
                 />
                 
                 {categoryRanking && (

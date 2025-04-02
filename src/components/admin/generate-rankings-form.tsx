@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Form,
@@ -46,7 +47,7 @@ export function GenerateRankingsForm({ categories, onRankingGenerated }: Generat
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categoryId: "",
+      categoryId: categories && categories.length > 0 ? categories[0].id : "",
       siteCount: "10",
       minVotes: "0",
       maxVotes: "100",
@@ -108,6 +109,15 @@ export function GenerateRankingsForm({ categories, onRankingGenerated }: Generat
       setIsSubmitting(false);
     }
   };
+
+  // Proteção contra o caso em que categories é undefined ou vazio
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="p-4 bg-muted rounded-md text-center">
+        Nenhuma categoria disponível. Por favor, adicione categorias primeiro.
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
