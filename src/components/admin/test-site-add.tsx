@@ -13,25 +13,24 @@ export function TestSiteAdd() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  // Corrigindo a função para testar a conexão Supabase
+  // Test Supabase connection function
   const testSupabaseConnection = async () => {
     try {
-      console.log("[TestSupabase] Testando conexão com Supabase...");
-      // Alterando a query para usar um formato compatível com PostgREST
+      console.log("[TestSupabase] Testing Supabase connection...");
       const { data, error } = await supabase
         .from('betting_sites')
         .select('id');
       
       if (error) {
-        console.error("[TestSupabase] Erro na conexão:", error);
-        setResult(`Erro na conexão: ${JSON.stringify(error, null, 2)}`);
+        console.error("[TestSupabase] Connection error:", error);
+        setResult(`Connection error: ${JSON.stringify(error, null, 2)}`);
       } else {
-        console.log("[TestSupabase] Conexão bem sucedida:", data);
-        setResult(`Conexão bem sucedida: ${JSON.stringify(data, null, 2)}`);
+        console.log("[TestSupabase] Connection successful:", data);
+        setResult(`Connection successful: ${JSON.stringify(data, null, 2)}`);
       }
     } catch (error) {
-      console.error("[TestSupabase] Exceção ao testar conexão:", error);
-      setResult(`Exceção: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("[TestSupabase] Exception while testing connection:", error);
+      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -65,9 +64,13 @@ export function TestSiteAdd() {
       console.log("[TestSiteAdd] Sending test site data:", testSite);
       console.log("[TestSiteAdd] User ID:", user.id);
       
-      // Vamos tentar um método alternativo - inserindo diretamente via Supabase
-      console.log("[TestSiteAdd] Tentando inserção direta via Supabase...");
+      // Try both mockDb and Supabase approaches
       
+      // 1. First via mockDb (original approach)
+      const mockDbResponse = await mockDb.bettingSites.create(testSite);
+      console.log("[TestSiteAdd] Response from mockDb create:", mockDbResponse);
+      
+      // 2. Then via direct Supabase insert
       const supabaseData = {
         name: testSite.name,
         url: testSite.url,
@@ -80,27 +83,29 @@ export function TestSiteAdd() {
         ltv: testSite.ltv
       };
       
-      console.log("[TestSiteAdd] Dados preparados para Supabase:", supabaseData);
+      console.log("[TestSiteAdd] Data prepared for Supabase:", supabaseData);
       
-      // Primeiro tente via mockDb (comportamento original)
-      const response = await mockDb.bettingSites.create(testSite);
-      console.log("[TestSiteAdd] Response from mockDb create:", response);
-      
-      // Depois tente direto via Supabase (teste paralelo)
       const { data, error } = await supabase
         .from('betting_sites')
         .insert(supabaseData)
         .select()
         .single();
         
-      console.log("[TestSiteAdd] Resposta direta do Supabase:", { data, error });
+      console.log("[TestSiteAdd] Supabase direct response:", { data, error });
       
-      if (response) {
+      if (error) {
+        console.error("[TestSiteAdd] Supabase error:", error);
+      }
+      
+      if (mockDbResponse) {
         toast({
-          title: "Test site added via mockDb",
-          description: `${response.name} has been added successfully.`
+          title: "Test site added",
+          description: `${mockDbResponse.name} has been added successfully.${
+            error ? " (Note: Supabase insert failed)" : " (Added to both mockDb and Supabase)"
+          }`
         });
-        setResult(`mockDb Response: ${JSON.stringify(response, null, 2)}
+        
+        setResult(`mockDb Response: ${JSON.stringify(mockDbResponse, null, 2)}
         
 Supabase Direct: ${JSON.stringify({ data, error }, null, 2)}`);
       } else {
@@ -137,7 +142,7 @@ Supabase Direct: ${JSON.stringify({ data, error }, null, 2)}`);
             onClick={addTestSite} 
             disabled={isLoading}
           >
-            {isLoading ? "Adding..." : "Add Test Site via MockDb"}
+            {isLoading ? "Adding..." : "Add Test Site"}
           </Button>
           
           <Button
