@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import Index from "./pages/Index";
 import Home from "./pages/Home";
@@ -42,7 +41,6 @@ const App = () => (
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
-    <ReactQueryDevtools initialIsOpen={false} />
   </QueryClientProvider>
 );
 

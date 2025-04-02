@@ -291,18 +291,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_daily_ranking: {
-        Args: {
-          category_id: string
-        }
-        Returns: string
-      }
+      generate_daily_ranking:
+        | {
+            Args: {
+              category_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              category_id: string
+              site_count?: number
+              min_votes?: number
+              max_votes?: number
+            }
+            Returns: string
+          }
       generate_sharing_token: {
         Args: {
           ranking_id: string
           user_id: string
         }
         Returns: string
+      }
+      increment_site_votes: {
+        Args: {
+          p_ranking_id: string
+          p_site_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

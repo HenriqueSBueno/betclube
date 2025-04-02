@@ -35,15 +35,13 @@ export function RankingList({ ranking }: RankingListProps) {
     queryKey: ['userVotes', user?.id, ranking.id],
     queryFn: () => VotingService.loadUserVotes(user?.id, ranking.id),
     enabled: !!user,
-    refetchOnWindowFocus: false,
   });
 
   // Consultar votos restantes
   const { data: remainingVotes = 0 } = useQuery({
     queryKey: ['remainingVotes', user?.id, ranking.id],
-    queryFn: () => VotingService.getRemainingVotes(user?.id, ranking.id),
+    queryFn: () => VotingService.getRemainingVotes(user, ranking.id),
     enabled: !!user,
-    refetchOnWindowFocus: false,
   });
 
   // Mutação para registrar voto

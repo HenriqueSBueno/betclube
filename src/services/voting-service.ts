@@ -1,134 +1,92 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { AuthUser } from "@/types/auth-types";
-import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export class VotingService {
   static VOTES_PER_RANKING = 3; // Maximum votes allowed per ranking
 
-  // Verifica se um usuário já votou em um site específico
-  static async hasVotedForSite(userId: string, siteId: string, rankingId: string): Promise<boolean> {
-    if (!userId) return false;
+  // Verificar se o usuário já votou em um site específico
+  static async hasVotedForSite(user: AuthUser | null, siteId: string, rankingId: string): Promise<boolean> {
+    if (!user) return false;
     
-    const { data, error } = await supabase
-      .from('votes')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('ranking_id', rankingId)
-      .eq('site_id', siteId)
-      .maybeSingle();
-      
-    if (error) {
-      console.error('Erro ao verificar voto:', error);
-      return false;
-    }
-    
-    return !!data;
+    const voteKey = this.getSiteVoteKey(siteId, rankingId);
+    const votes = await this.loadUserVotes(user?.id, rankingId);
+    return votes[voteKey] === true;
   }
 
-  // Obter votos restantes para um ranking
-  static async getRemainingVotes(userId: string, rankingId: string): Promise<number> {
-    if (!userId) return 0;
+  // Obter votos restantes para o usuário no ranking
+  static async getRemainingVotes(user: AuthUser | null, rankingId: string): Promise<number> {
+    if (!user) return 0;
     
-    const { count, error } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('ranking_id', rankingId);
+    const today = new Date().toISOString().split('T')[0];
+    const storedVotes = localStorage.getItem(`userVotes_${user.id}_${today}`);
+    const votedSiteIds = storedVotes ? JSON.parse(storedVotes) : {};
     
-    if (error) {
-      console.error('Erro ao contar votos:', error);
-      return 0;
-    }
+    // Contar votos usados para este ranking
+    let usedVotes = 0;
+    Object.keys(votedSiteIds).forEach(key => {
+      // Extrair rankingId do formato siteId_rankingId
+      const parts = key.split('_');
+      if (parts.length === 2 && parts[1] === rankingId && votedSiteIds[key] === true) {
+        usedVotes++;
+      }
+    });
     
-    return Math.max(0, this.VOTES_PER_RANKING - (count || 0));
+    return Math.max(0, this.VOTES_PER_RANKING - usedVotes);
   }
 
-  // Registrar voto
-  static async registerVote(user: AuthUser, rankingId: string, siteId: string): Promise<void> {
-    if (!user?.id) throw new Error("Usuário não autenticado");
+  // Registrar voto do usuário
+  static async registerVote(user: AuthUser, rankingId: string, siteId: string): Promise<Record<string, boolean>> {
+    if (!user) throw new Error("Usuário não autenticado");
     
-    // Verificar votos restantes
-    const remainingVotes = await this.getRemainingVotes(user.id, rankingId);
+    // Verificar se o usuário tem votos restantes para este ranking
+    const remainingVotes = await this.getRemainingVotes(user, rankingId);
     if (remainingVotes <= 0) {
       throw new Error("Você já usou todos os seus votos para esta lista hoje");
     }
     
-    // Verificar se já votou neste site
-    const hasVoted = await this.hasVotedForSite(user.id, siteId, rankingId);
-    if (hasVoted) {
-      throw new Error("Você já votou neste site hoje");
-    }
-    
-    // Em uma aplicação real, obteríamos o IP do cliente
-    const mockIp = "127.0.0.1";
-    
-    // Inserir voto
-    const { error: insertError } = await supabase
-      .from('votes')
-      .insert({
-        user_id: user.id,
-        ranking_id: rankingId,
-        site_id: siteId,
-        ip: mockIp
+    try {
+      // Chamar a função RPC para incrementar votos no Supabase
+      await supabase.rpc('increment_site_votes', {
+        p_ranking_id: rankingId,
+        p_site_id: siteId
       });
       
-    if (insertError) throw insertError;
-    
-    // Incrementar o contador de votos para o site neste ranking
-    const { error: updateError } = await supabase.rpc('increment_site_votes', {
-      p_ranking_id: rankingId,
-      p_site_id: siteId
-    });
-    
-    if (updateError) {
-      // Tentar atualizar manualmente caso a função RPC não esteja disponível
-      const { error } = await supabase
-        .from('ranked_sites')
-        .update({ votes: supabase.sql`votes + 1` })
-        .eq('ranking_id', rankingId)
-        .eq('site_id', siteId);
+      // Salvar o voto localmente para controle de limite por usuário
+      const today = new Date().toISOString().split('T')[0];
+      const storedVotes = localStorage.getItem(`userVotes_${user.id}_${today}`);
+      const votedSiteIds = storedVotes ? JSON.parse(storedVotes) : {};
       
-      if (error) throw error;
+      const voteKey = this.getSiteVoteKey(siteId, rankingId);
+      const updatedVotes = { ...votedSiteIds, [voteKey]: true };
+      localStorage.setItem(`userVotes_${user.id}_${today}`, JSON.stringify(updatedVotes));
+      
+      toast.success("Voto registrado com sucesso!");
+      return updatedVotes;
+    } catch (error: any) {
+      console.error("Erro ao registrar voto:", error);
+      toast.error("Erro ao registrar seu voto. Tente novamente mais tarde.");
+      throw new Error(error.message || "Erro ao registrar voto");
     }
   }
 
-  // Carregar votos do usuário (mantido para compatibilidade com o componente existente)
+  // Carregar votos do usuário
   static async loadUserVotes(userId: string | undefined, rankingId: string): Promise<Record<string, boolean>> {
     if (!userId) return {};
     
-    const { data, error } = await supabase
-      .from('votes')
-      .select('site_id, ranking_id')
-      .eq('user_id', userId);
+    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+    const storedVotes = localStorage.getItem(`userVotes_${userId}_${today}`);
     
-    if (error) {
-      console.error('Erro ao carregar votos:', error);
-      return {};
+    if (storedVotes) {
+      return JSON.parse(storedVotes);
     }
     
-    const votedSiteIds: Record<string, boolean> = {};
-    data.forEach(vote => {
-      const voteKey = this.getSiteVoteKey(vote.site_id, vote.ranking_id);
-      votedSiteIds[voteKey] = true;
-    });
-    
-    return votedSiteIds;
+    return {};
   }
 
-  // Formatação da chave para compatibilidade com o componente existente
+  // Obter chave para identificar voto único (site + ranking)
   static getSiteVoteKey(siteId: string, rankingId: string): string {
     return `${siteId}_${rankingId}`;
-  }
-  
-  // Função para resetar votos de um ranking específico (usado pela função de regeneração)
-  static async resetVotesForRanking(rankingId: string): Promise<void> {
-    // Deletar todos os votos para este ranking
-    const { error } = await supabase
-      .from('votes')
-      .delete()
-      .eq('ranking_id', rankingId);
-      
-    if (error) throw error;
   }
 }

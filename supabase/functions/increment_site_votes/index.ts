@@ -31,14 +31,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    // Atualizar contador de votos
-    const { data, error } = await supabaseClient
-      .from('ranked_sites')
-      .update({ votes: supabase.sql`votes + 1` })
-      .eq('ranking_id', rankingId)
-      .eq('site_id', siteId)
-      .select('votes')
-      .single();
+    // Chamar a função RPC para incrementar votos
+    const { data, error } = await supabaseClient.rpc('increment_site_votes', {
+      p_ranking_id: rankingId,
+      p_site_id: siteId
+    });
       
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
@@ -47,7 +44,22 @@ serve(async (req) => {
       });
     }
     
-    return new Response(JSON.stringify({ success: true, votes: data.votes }), {
+    // Buscar os votos atualizados
+    const { data: votes, error: votesError } = await supabaseClient
+      .from('ranked_sites')
+      .select('votes')
+      .eq('ranking_id', rankingId)
+      .eq('site_id', siteId)
+      .single();
+    
+    if (votesError) {
+      return new Response(JSON.stringify({ error: votesError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    return new Response(JSON.stringify({ success: true, votes: votes.votes }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

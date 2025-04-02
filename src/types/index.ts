@@ -1,4 +1,3 @@
-
 export type UserRole = "admin" | "user";
 
 export interface User {
@@ -26,7 +25,7 @@ export interface RankingCategory {
   id: string;
   name: string;
   description: string;
-  adminOwnerId: string;
+  admin_owner_id: string;
 }
 
 export interface DailyRanking {

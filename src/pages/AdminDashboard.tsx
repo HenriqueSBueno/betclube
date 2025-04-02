@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   
   // Buscar categorias do servidor
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,10 +25,13 @@ const AdminDashboard = () => {
         .select('*');
       
       if (error) throw error;
-      return data as RankingCategory[];
+      return data;
     },
     enabled: isAuthenticated && user?.role === "admin"
   });
+
+  // Converter para o formato esperado pelo componente
+  const categories = categoriesData as RankingCategory[];
 
   // Espaço reservado para ações que precisam ser executadas quando os dados são alterados
   const handleDataChange = () => {
