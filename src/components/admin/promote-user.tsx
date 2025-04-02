@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-interface ProfileWithEmail {
+// Define the type for clarity
+type ProfileData = {
   id: string;
-  email: string;
 }
 
 export function PromoteUser() {
@@ -24,11 +24,13 @@ export function PromoteUser() {
     
     try {
       // Get user data by looking up the email directly in the profiles
-      const { data: users, error: userError } = await supabase
+      const { data, error: userError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email)
-        .returns<{id: string}[]>();
+        .eq('email', email);
+      
+      // Type assertion to avoid deep inference issues
+      const users = data as ProfileData[] | null;
       
       if (userError || !users || users.length === 0) {
         throw new Error(userError?.message || "Usuário não encontrado");
