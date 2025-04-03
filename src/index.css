@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -148,4 +147,17 @@
 
 .visit-button:hover .flame-icon {
   animation-duration: 0.8s;
+}
+
+/* Add hover effect for the "Ir agora!" text */
+.visit-button-text {
+  transition: all 0.3s ease;
+}
+
+.visit-button:hover .visit-button-text-static {
+  opacity: 0;
+}
+
+.visit-button:hover .visit-button-text-hover {
+  opacity: 1;
 }
