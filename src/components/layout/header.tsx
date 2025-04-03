@@ -13,11 +13,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
 
   const getUserInitials = () => {
     if (!user?.email) return "U";
@@ -57,6 +57,16 @@ export function Header() {
             <Link to="/home" className="text-sm font-medium hover:underline">
               Rankings
             </Link>
+            
+            {isAuthenticated && isAdmin && (
+              <Link 
+                to="/admin" 
+                className="flex items-center space-x-1 text-sm font-medium hover:underline text-primary"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </Link>
+            )}
           </nav>
         </div>
         
@@ -82,14 +92,6 @@ export function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                {user?.role === "admin" && (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin">Admin Dashboard</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
