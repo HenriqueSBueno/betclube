@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Trophy, Users, Star } from "lucide-react";
+import { ArrowRight, Trophy, Users, Star, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function LandingPage() {
@@ -18,8 +18,9 @@ export function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5dff9_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-6 text-center">
-            <div className="inline-block rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-              Comunidade de apostadores
+            <div className="inline-flex gap-2 items-center rounded-full bg-green-100 px-3 py-1 text-sm text-green-600 font-medium">
+              <Check className="h-4 w-4" />
+              100% Gratuito para Sempre
             </div>
             <div className="space-y-3">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl/none lg:text-6xl/none">
@@ -60,7 +61,7 @@ export function LandingPage() {
         <div className="container px-4 md:px-6">
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-bold md:text-3xl">Por que escolher o Betclub?</h2>
-            <p className="mt-2 text-muted-foreground">Oferecemos uma experiência única para os apostadores</p>
+            <p className="mt-2 text-muted-foreground">Oferecemos uma experiência única e totalmente gratuita para os apostadores</p>
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm hover:shadow-md transition-all">
@@ -96,6 +97,27 @@ export function LandingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+      
+      <section className="w-full py-12 bg-gradient-to-r from-primary/10 to-secondary/10">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="inline-block px-4 py-1.5 mb-4 text-sm font-medium rounded-full bg-primary/20 text-primary">
+              Sem custos escondidos
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight mb-4">Completamente Gratuito</h2>
+            <p className="max-w-[700px] text-lg text-muted-foreground mb-8">
+              O Betclub é e sempre será 100% gratuito para todos os usuários. Sem taxas, sem assinaturas, sem limitações.
+            </p>
+            <Button 
+              size="lg" 
+              onClick={() => setIsAuthModalOpen(true)}
+              className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md"
+            >
+              Crie Sua Conta Grátis Agora
+            </Button>
           </div>
         </div>
       </section>

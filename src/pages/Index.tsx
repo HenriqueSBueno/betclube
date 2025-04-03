@@ -44,6 +44,9 @@ const Index = () => {
         {isAuthenticated ? (
           <>
             <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 bg-green-100 text-green-600 text-sm font-medium rounded-full">
+                <Check className="h-4 w-4" /> 100% Gratuito
+              </div>
               <h1 className="text-4xl font-bold tracking-tight mb-3">
                 Betclub Rankings
               </h1>
