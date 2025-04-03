@@ -7,6 +7,7 @@ import { RankingCategory, DailyRanking } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
+import { Check } from "lucide-react";
 
 const Home = () => {
   // Buscar categorias
@@ -34,11 +35,14 @@ const Home = () => {
   const isLoading = categoriesLoading || rankingsLoading;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/30">
       <Header />
       
       <main className="flex-1 container py-8">
         <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 bg-green-100 text-green-600 text-sm font-medium rounded-full">
+            <Check className="h-4 w-4" /> 100% Gratuito
+          </div>
           <h1 className="text-4xl font-bold tracking-tight mb-3">
             Betclub Rankings
           </h1>
@@ -52,7 +56,10 @@ const Home = () => {
             <div className="animate-pulse text-lg">Loading rankings...</div>
           </div>
         ) : (
-          <RankingTabs categories={categories} rankings={rankings} />
+          <div className="relative">
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5dff9_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
+            <RankingTabs categories={categories} rankings={rankings} />
+          </div>
         )}
       </main>
       
