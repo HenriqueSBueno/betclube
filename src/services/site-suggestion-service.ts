@@ -14,12 +14,16 @@ export class SiteSuggestionService {
   static async submitSuggestion(url: string): Promise<{ success: boolean; message: string }> {
     try {
       // Get client IP address from request headers (will be populated by Supabase)
-      const { data: ipData } = await supabase.rpc('submit_site_suggestion', {
-        url_input: url,
-        ip_address: "client-ip-auto-detected" // Supabase will replace this with actual IP
-      });
+      const { data, error } = await supabase.rpc(
+        'submit_site_suggestion' as any, 
+        {
+          url_input: url,
+          ip_address: "client-ip-auto-detected" // Supabase will replace this with actual IP
+        }
+      );
 
-      return ipData || { success: true, message: "Sugestão enviada com sucesso!" };
+      if (error) throw error;
+      return data as { success: boolean; message: string } || { success: true, message: "Sugestão enviada com sucesso!" };
     } catch (error: any) {
       console.error("Error submitting suggestion:", error);
       return { 
@@ -32,13 +36,13 @@ export class SiteSuggestionService {
   static async getAllSuggestions(): Promise<SiteSuggestion[]> {
     try {
       const { data, error } = await supabase
-        .from('site_suggestions')
+        .from('site_suggestions' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      return data || [];
+      return data as SiteSuggestion[] || [];
     } catch (error) {
       console.error("Error fetching suggestions:", error);
       return [];
@@ -48,7 +52,7 @@ export class SiteSuggestionService {
   static async updateSuggestion(id: string, url: string, status: 'pending' | 'approved' | 'rejected'): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('site_suggestions')
+        .from('site_suggestions' as any)
         .update({ url, status })
         .eq('id', id);
 
@@ -63,7 +67,7 @@ export class SiteSuggestionService {
   static async deleteSuggestion(id: string): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('site_suggestions')
+        .from('site_suggestions' as any)
         .delete()
         .eq('id', id);
 
