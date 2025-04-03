@@ -37,7 +37,7 @@ const Index = () => {
   const isLoading = categoriesLoading || rankingsLoading;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/30">
       <Header />
       
       <main className="flex-1 container py-8">

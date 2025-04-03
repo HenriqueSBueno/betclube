@@ -5,37 +5,50 @@ import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight, Trophy, Users, Star } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   return (
     <div className="flex flex-col items-center">
-      <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48">
+      <section className="relative w-full py-12 md:py-24 lg:py-32">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5dff9_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Discover the Best Betting Sites
+          <div className="flex flex-col items-center space-y-6 text-center">
+            <div className="inline-block rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
+              Comunidade de apostadores
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl/none lg:text-6xl/none">
+                Descubra os <span className="text-primary">Melhores Sites</span> de Apostas
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Join our community and vote for your favorite betting sites. See what others recommend and make informed decisions.
+                Junte-se à nossa comunidade e vote nos seus sites de apostas favoritos. Veja as recomendações de outros usuários e tome decisões informadas.
               </p>
             </div>
-            <div className="space-x-4">
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
               <Button 
-                size="lg" 
+                size={isMobile ? "default" : "lg"} 
                 onClick={() => setIsAuthModalOpen(true)}
+                className="w-full sm:w-auto"
               >
-                Get Started
+                Comece Agora
               </Button>
               <Button 
-                size="lg"
-                variant="outline"
+                size={isMobile ? "default" : "lg"}
+                variant="secondary"
+                className="w-full sm:w-auto group relative overflow-hidden transition-all duration-300"
                 asChild
               >
                 <Link to="/home">
-                  View Rankings
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    Ver Rankings
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span className="absolute inset-0 z-0 bg-gradient-to-r from-secondary via-secondary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </Link>
               </Button>
             </div>
@@ -43,30 +56,43 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+      <section className="w-full py-12 md:py-24 bg-muted/50">
         <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold md:text-3xl">Por que escolher o Betclub?</h2>
+            <p className="mt-2 text-muted-foreground">Oferecemos uma experiência única para os apostadores</p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm hover:shadow-md transition-all">
               <div className="space-y-2">
-                <h3 className="text-xl font-bold">Community Driven</h3>
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Comunidade Ativa</h3>
                 <p className="text-muted-foreground">
-                  Rankings based on real user votes and experiences, not paid placements.
+                  Rankings baseados em votos e experiências reais, não em anúncios pagos.
                 </p>
               </div>
             </div>
-            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm">
+            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm hover:shadow-md transition-all">
               <div className="space-y-2">
-                <h3 className="text-xl font-bold">Daily Updates</h3>
+                <div className="h-12 w-12 rounded-full bg-secondary/20 flex items-center justify-center mb-4">
+                  <Star className="h-6 w-6 text-secondary" />
+                </div>
+                <h3 className="text-xl font-bold">Atualizações Diárias</h3>
                 <p className="text-muted-foreground">
-                  Our rankings update every day to reflect the latest user votes and trends.
+                  Nossos rankings são atualizados todos os dias para refletir os últimos votos e tendências.
                 </p>
               </div>
             </div>
-            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm">
+            <div className="flex flex-col justify-between p-6 bg-background rounded-lg border shadow-sm hover:shadow-md transition-all">
               <div className="space-y-2">
-                <h3 className="text-xl font-bold">Multiple Categories</h3>
+                <div className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center mb-4">
+                  <Trophy className="h-6 w-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold">Múltiplas Categorias</h3>
                 <p className="text-muted-foreground">
-                  Find the best sites for sports betting, casino games, poker and more.
+                  Encontre os melhores sites para apostas esportivas, jogos de cassino, poker e mais.
                 </p>
               </div>
             </div>
