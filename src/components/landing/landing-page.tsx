@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -10,7 +9,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [showRegisterForm, setShowRegisterForm] = useState(true);
   const isMobile = useIsMobile();
+  
+  const handleStartNowClick = () => {
+    setShowRegisterForm(true);
+    setIsAuthModalOpen(true);
+  };
   
   return <div className="flex flex-col items-center">
       <section className="relative w-full py-12 md:py-24 lg:py-32">
@@ -28,7 +33,7 @@ export function LandingPage() {
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">Junte-se à nossa comunidade e vote na melhor Bet do dia. Veja as recomendações de outros usuários e tome a melhor decisão</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-              <Button size={isMobile ? "default" : "lg"} onClick={() => setIsAuthModalOpen(true)} className="w-full sm:w-auto">
+              <Button size={isMobile ? "default" : "lg"} onClick={handleStartNowClick} className="w-full sm:w-auto">
                 Comece Agora
               </Button>
               <Button size={isMobile ? "default" : "lg"} variant="secondary" className="w-full sm:w-auto group relative overflow-hidden transition-all duration-300" asChild>
@@ -106,6 +111,6 @@ export function LandingPage() {
         </div>
       </section>
       
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView="register" />
     </div>;
 }
