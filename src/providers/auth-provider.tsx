@@ -1,9 +1,8 @@
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
-import { AuthUser, AuthContextType } from "@/types/auth-types";
+import { AuthUser, AuthContextType, UserProfile } from "@/types/auth-types";
 import { fetchUserProfile } from "@/hooks/use-user-profile";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,13 +14,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log("[AuthProvider] Auth state changed:", event, !!currentSession);
         
         if (currentSession?.user) {
-          // Defer profile fetching to avoid auth state deadlock
           setTimeout(async () => {
             const enrichedUser = await fetchUserProfile(
               currentSession.user.id, 
@@ -35,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setSession(currentSession);
         
-        // Só mostra os toasts após a inicialização e em eventos reais
         if (hasInitialized) {
           if (event === 'SIGNED_IN') {
             toast({
@@ -54,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       console.log("[AuthProvider] Initial session check:", !!currentSession);
       
@@ -79,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Add isAdmin function to check if the user has admin role
   const isAdmin = () => {
     return user?.role === 'admin';
   };
@@ -95,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error;
       
-      // Update local user state with new data
       setUser(prev => prev ? { ...prev, ...data } : null);
       
       toast({

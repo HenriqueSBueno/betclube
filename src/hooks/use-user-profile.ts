@@ -13,10 +13,10 @@ export const fetchUserProfile = async (userId: string, userObj: User): Promise<A
     
     if (error) {
       console.error('Error fetching user profile:', error);
-      return userObj;
+      return { ...userObj, role: 'user' } as AuthUser;
     }
     
-    const profile = data as UserProfile;
+    const profile = data as Partial<UserProfile> || {};
     
     return { 
       ...userObj, 
@@ -25,6 +25,6 @@ export const fetchUserProfile = async (userId: string, userObj: User): Promise<A
     } as AuthUser;
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);
-    return userObj;
+    return { ...userObj, role: 'user' } as AuthUser;
   }
 };
