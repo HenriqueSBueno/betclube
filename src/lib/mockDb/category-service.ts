@@ -1,6 +1,7 @@
 
 import { rankingCategories } from './models';
 import { RankingCategory } from '@/types';
+import { mockDb } from './index';
 
 export const categoryService = {
   getAll: () => [...rankingCategories],
@@ -24,6 +25,25 @@ export const categoryService = {
   update: (id: string, categoryData: Partial<RankingCategory>) => {
     const index = rankingCategories.findIndex(category => category.id === id);
     if (index !== -1) {
+      // If name is being updated, update sites
+      if (categoryData.name && rankingCategories[index].name !== categoryData.name) {
+        const oldName = rankingCategories[index].name;
+        const newName = categoryData.name;
+        
+        console.log(`Mock DB: Updating category name from '${oldName}' to '${newName}'`);
+        
+        // Update category name in all sites
+        mockDb.bettingSites.getAll().forEach(site => {
+          if (site.category.includes(oldName)) {
+            const updatedCategories = site.category.map(cat => 
+              cat === oldName ? newName : cat
+            );
+            mockDb.bettingSites.update(site.id, { category: updatedCategories });
+          }
+        });
+      }
+      
+      // Update the category
       rankingCategories[index] = { ...rankingCategories[index], ...categoryData };
       return rankingCategories[index];
     }

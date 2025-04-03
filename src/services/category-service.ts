@@ -100,6 +100,19 @@ export class CategoryService {
    */
   static async update(id: string, category: Partial<RankingCategory>): Promise<RankingCategory | null> {
     try {
+      // Get the original category before updating
+      const { data: originalCategory, error: getError } = await supabase
+        .from("ranking_categories")
+        .select("name")
+        .eq("id", id)
+        .single();
+        
+      if (getError) {
+        console.error("Error fetching original category:", getError);
+        throw getError;
+      }
+      
+      // Update the category
       const { data, error } = await supabase
         .from("ranking_categories")
         .update(category)
@@ -113,8 +126,9 @@ export class CategoryService {
       }
       
       // If category name was updated, update all sites that reference this category
-      if (category.name) {
-        await this.updateCategoryNameInSites(id, category.name);
+      if (category.name && originalCategory && originalCategory.name !== category.name) {
+        console.log(`Category name changed from '${originalCategory.name}' to '${category.name}'. Updating sites...`);
+        await this.updateCategoryNameInSites(originalCategory.name, category.name);
       }
 
       return data as RankingCategory;
@@ -127,23 +141,9 @@ export class CategoryService {
   /**
    * Update category name in all sites that reference it
    */
-  private static async updateCategoryNameInSites(categoryId: string, newName: string): Promise<boolean> {
+  private static async updateCategoryNameInSites(oldName: string, newName: string): Promise<boolean> {
     try {
-      console.log(`Updating sites with category ID ${categoryId} to new name: ${newName}`);
-      
-      // Get the old category name
-      const { data: oldCategory, error: categoryError } = await supabase
-        .from("ranking_categories")
-        .select("name")
-        .eq("id", categoryId)
-        .maybeSingle();
-        
-      if (categoryError || !oldCategory) {
-        console.error("Error fetching old category name:", categoryError);
-        return false;
-      }
-      
-      const oldName = oldCategory.name;
+      console.log(`Updating sites with category name from '${oldName}' to '${newName}'`);
       
       // Get all sites that include this category
       const { data: sites, error: sitesError } = await supabase
@@ -161,6 +161,8 @@ export class CategoryService {
           const updatedCategories = site.category.map((cat: string) => 
             cat === oldName ? newName : cat
           );
+          
+          console.log(`Updating site ${site.id} categories:`, site.category, "->", updatedCategories);
           
           const { error: updateError } = await supabase
             .from("betting_sites")
