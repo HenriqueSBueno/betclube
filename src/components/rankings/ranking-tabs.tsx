@@ -31,35 +31,15 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
         ))}
       </TabsList>
       
-      {categories.map((category) => {
-        const ranking = rankings.find(r => r.categoryId === category.id);
-        
-        return (
-          <TabsContent key={category.id} value={category.id}>
-            {ranking ? (
-              <>
-                <div className="mb-6 text-center">
-                  <h2 className="text-2xl font-bold mb-2">
-                    Top {ranking.sites.length} {category.name} Betting Sites
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Updated {new Date(ranking.generationDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <RankingList 
-                  categoryId={category.id}
-                  onVote={onVote}
-                  isInteractive={isInteractive}
-                />
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <p>No ranking data available for this category.</p>
-              </div>
-            )}
-          </TabsContent>
-        );
-      })}
+      {categories.map((category) => (
+        <TabsContent key={category.id} value={category.id}>
+          <RankingList 
+            categoryId={category.id}
+            onVote={onVote}
+            isInteractive={isInteractive}
+          />
+        </TabsContent>
+      ))}
     </Tabs>
   );
 }

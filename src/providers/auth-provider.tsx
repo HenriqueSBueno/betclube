@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
@@ -12,12 +11,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
     // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        setSession(currentSession);
+        console.log("[AuthProvider] Auth state changed:", event, !!currentSession);
         
         if (currentSession?.user) {
           // Defer profile fetching to avoid auth state deadlock
@@ -31,25 +31,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setUser(null);
         }
+
+        setSession(currentSession);
         
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: 'Login realizado',
-            description: 'Você foi conectado com sucesso',
-          });
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          toast({
-            title: 'Desconectado',
-            description: 'Você foi desconectado com sucesso',
-          });
+        // Só mostra os toasts após a inicialização e em eventos reais
+        if (hasInitialized) {
+          if (event === 'SIGNED_IN') {
+            toast({
+              title: 'Login realizado',
+              description: 'Você foi conectado com sucesso',
+            });
+          }
+          
+          if (event === 'SIGNED_OUT') {
+            toast({
+              title: 'Desconectado',
+              description: 'Você foi desconectado com sucesso',
+            });
+          }
         }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      console.log("[AuthProvider] Initial session check:", !!currentSession);
+      
       setSession(currentSession);
       
       if (currentSession?.user) {
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       setIsLoading(false);
+      setHasInitialized(true);
     });
 
     return () => {

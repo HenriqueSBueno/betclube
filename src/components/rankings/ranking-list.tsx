@@ -38,7 +38,7 @@ export function RankingList({
       // Busca o ranking mais recente da categoria
       const { data: ranking, error: rankingError } = await supabase
         .from("daily_rankings")
-        .select("id")
+        .select("*")
         .eq("category_id", categoryId)
         .order("generation_date", { ascending: false })
         .limit(1)
@@ -58,7 +58,7 @@ export function RankingList({
 
       setCurrentRankingId(ranking.id);
 
-      // Busca os sites do ranking
+      // Busca os sites do ranking com todos os detalhes necessários
       const { data: rankedSites, error: sitesError } = await supabase
         .from("ranked_sites")
         .select(`
@@ -71,7 +71,10 @@ export function RankingList({
             name,
             description,
             url,
-            logo_url
+            logo_url,
+            category,
+            registration_date,
+            admin_owner_id
           )
         `)
         .eq("ranking_id", ranking.id)
@@ -91,9 +94,9 @@ export function RankingList({
           description: rs.site.description,
           url: rs.site.url,
           logoUrl: rs.site.logo_url,
-          category: [], // Campo obrigatório
-          registrationDate: new Date(), // Campo obrigatório
-          adminOwnerId: "" // Campo obrigatório
+          category: rs.site.category || [], // Usa os dados do banco ou array vazio
+          registrationDate: new Date(rs.site.registration_date), // Converte a data
+          adminOwnerId: rs.site.admin_owner_id
         },
         votes: rs.votes,
         position: rs.position
@@ -160,22 +163,31 @@ export function RankingList({
   }
 
   if (sites.length === 0) {
-    return <div>Nenhum site encontrado para esta categoria.</div>;
+    return <div className="text-center py-8">
+      <p>Nenhum site encontrado para esta categoria.</p>
+    </div>;
   }
 
   return (
-    <div className="space-y-4">
-      {sites.map((site, index) => (
-        <SiteCard
-          key={site.siteId}
-          rankedSite={site}
-          index={index}
-          maxVotes={100}
-          isTopThree={index < 3}
-          rankingId={currentRankingId || ""}
-          onVoteUpdate={handleVoteUpdate}
-        />
-      ))}
-    </div>
+    <>
+      <div className="mb-6 text-center">
+        <h2 className="text-2xl font-bold mb-2">
+          Top {sites.length} Sites de Apostas
+        </h2>
+      </div>
+      <div className="space-y-4">
+        {sites.map((site, index) => (
+          <SiteCard
+            key={site.siteId}
+            rankedSite={site}
+            index={index}
+            maxVotes={100}
+            isTopThree={index < 3}
+            rankingId={currentRankingId || ""}
+            onVoteUpdate={handleVoteUpdate}
+          />
+        ))}
+      </div>
+    </>
   );
 }

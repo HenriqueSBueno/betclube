@@ -115,8 +115,8 @@ export function SiteCard({
           ? 'bg-amber-50 dark:bg-amber-950/50' 
           : ''
       }`}>
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center sm:flex-col gap-2 sm:gap-3">
             <div className={`text-2xl font-bold ${
               isTopThree 
                 ? 'text-amber-500 dark:text-amber-400' 
@@ -130,7 +130,7 @@ export function SiteCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`flex items-center gap-1 ${
+                    className={`flex items-center gap-1 w-full sm:w-auto ${
                       hasVoted 
                         ? 'bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700'
                         : remainingVotes <= 0
@@ -143,7 +143,7 @@ export function SiteCard({
                     disabled={isVoting || hasVoted || remainingVotes <= 0}
                   >
                     <ArrowUp className="h-4 w-4" />
-                    Votar
+                    <span className="hidden sm:inline">Votar</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -158,9 +158,9 @@ export function SiteCard({
             </TooltipProvider>
           </div>
 
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+          <div className="flex-1 w-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-medium">
                   {rankedSite.site.name}
                 </h3>
@@ -173,7 +173,7 @@ export function SiteCard({
               <Button 
                 variant="outline"
                 size="sm"
-                className={`${
+                className={`w-full sm:w-auto ${
                   isTopThree 
                     ? 'bg-amber-400 hover:bg-amber-500 dark:bg-amber-500 dark:hover:bg-amber-600 text-black dark:text-white border-none' 
                     : ''
@@ -190,7 +190,7 @@ export function SiteCard({
               </Button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2 sm:line-clamp-none">
               {rankedSite.site.description}
             </p>
 
@@ -199,14 +199,7 @@ export function SiteCard({
                 <span className="text-xs text-muted-foreground">Popularidade</span>
                 <span className="text-xs font-medium">{rankedSite.votes} votos</span>
               </div>
-              <Progress
-                value={(rankedSite.votes / maxVotes) * 100}
-                className={`h-2 ${
-                  isTopThree 
-                    ? 'bg-amber-200 dark:bg-amber-900' 
-                    : ''
-                }`}
-              />
+              <Progress value={(rankedSite.votes / maxVotes) * 100} className="h-2" />
             </div>
           </div>
         </div>
