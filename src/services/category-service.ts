@@ -70,9 +70,11 @@ export class CategoryService {
         .select("position")
         .order("position", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
         
-      const nextPosition = maxPositionError ? 0 : (maxPositionData?.position || 0) + 1;
+      const nextPosition = (maxPositionData && maxPositionData.position !== undefined) 
+        ? (maxPositionData.position + 1) 
+        : 0;
       
       const { data, error } = await supabase
         .from("ranking_categories")
@@ -282,7 +284,7 @@ export class CategoryService {
         .select("id, position")
         .order("position", { ascending: true });
         
-      if (fetchError) {
+      if (fetchError || !categories) {
         console.error("Error fetching categories for reordering:", fetchError);
         return;
       }

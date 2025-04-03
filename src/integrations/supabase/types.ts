@@ -156,18 +156,21 @@ export type Database = {
           description: string
           id: string
           name: string
+          position: number | null
         }
         Insert: {
           admin_owner_id: string
           description: string
           id?: string
           name: string
+          position?: number | null
         }
         Update: {
           admin_owner_id?: string
           description?: string
           id?: string
           name?: string
+          position?: number | null
         }
         Relationships: []
       }
