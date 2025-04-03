@@ -27,7 +27,7 @@ export interface RankingCategory {
   name: string;
   description: string;
   admin_owner_id: string; // Changed from adminOwnerId to match database column name
-  position?: number; // Added position for ordering categories
+  position: number | null; // Make position required to match database schema
 }
 
 export interface DailyRanking {

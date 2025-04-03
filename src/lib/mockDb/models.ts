@@ -177,19 +177,22 @@ export const rankingCategories: RankingCategory[] = [
     id: '1',
     name: 'Sports',
     description: 'Best sports betting sites',
-    admin_owner_id: '1' // Updated from adminOwnerId
+    admin_owner_id: '1', // Updated from adminOwnerId
+    position: 0 // Added position field
   },
   {
     id: '2',
     name: 'Casino',
     description: 'Top online casinos',
-    admin_owner_id: '1' // Updated from adminOwnerId
+    admin_owner_id: '1', // Updated from adminOwnerId
+    position: 1 // Added position field
   },
   {
     id: '3',
     name: 'Poker',
     description: 'Leading poker platforms',
-    admin_owner_id: '1' // Updated from adminOwnerId
+    admin_owner_id: '1', // Updated from adminOwnerId
+    position: 2 // Added position field
   }
 ];
 

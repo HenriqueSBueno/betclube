@@ -5,8 +5,19 @@ import { RankingCategory } from '@/types';
 export const categoryService = {
   getAll: () => [...rankingCategories],
   findById: (id: string) => rankingCategories.find(category => category.id === id),
-  create: (category: Omit<RankingCategory, 'id'>) => {
-    const newCategory = { ...category, id: String(rankingCategories.length + 1) };
+  create: (category: Omit<RankingCategory, 'id' | 'position'>) => {
+    // Find the highest position
+    const highestPosition = rankingCategories.reduce(
+      (max, cat) => Math.max(max, cat.position || 0), 
+      -1
+    );
+    
+    const newCategory = { 
+      ...category, 
+      id: String(rankingCategories.length + 1),
+      position: highestPosition + 1 
+    };
+    
     rankingCategories.push(newCategory);
     return newCategory;
   },
