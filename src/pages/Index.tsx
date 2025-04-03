@@ -1,4 +1,3 @@
-
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { RankingTabs } from "@/components/rankings/ranking-tabs";
@@ -8,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { LandingPage } from "@/components/landing/landing-page";
 import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
+import { Check } from "lucide-react";
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
