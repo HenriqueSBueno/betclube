@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { SiteCard } from "./site-card";
 import { RankedSite, DailyRanking } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface RankingListProps {
   categoryId?: string;
@@ -24,9 +25,9 @@ export function RankingList({
   const [isLoading, setIsLoading] = useState(true);
   const [currentRankingId, setCurrentRankingId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>("");
+  const [suggestionUrl, setSuggestionUrl] = useState('');
   const { toast } = useToast();
 
-  // Função para buscar os dados mais recentes
   const fetchLatestData = async () => {
     if (!categoryId) {
       console.log("[RankingList] Sem categoryId, não é possível buscar dados");
@@ -37,7 +38,6 @@ export function RankingList({
       setIsLoading(true);
       console.log("[RankingList] Buscando dados mais recentes para categoria:", categoryId);
 
-      // Busca o ranking mais recente da categoria
       const { data: ranking, error: rankingError } = await supabase
         .from("daily_rankings")
         .select("*")
@@ -61,7 +61,6 @@ export function RankingList({
       setCurrentRankingId(ranking.id);
       setCategoryName(ranking.category_name);
 
-      // Busca os sites do ranking com todos os detalhes necessários
       const { data: rankedSites, error: sitesError } = await supabase
         .from("ranked_sites")
         .select(`
@@ -81,14 +80,13 @@ export function RankingList({
           )
         `)
         .eq("ranking_id", ranking.id)
-        .order("votes", { ascending: false }); // Mudado para ordenar por votos em ordem decrescente
+        .order("votes", { ascending: false });
 
       if (sitesError) {
         console.error("[RankingList] Erro ao buscar sites:", sitesError);
         throw sitesError;
       }
 
-      // Transforma os dados para o formato esperado
       const formattedSites = rankedSites.map(rs => ({
         siteId: rs.site_id,
         site: {
@@ -97,8 +95,8 @@ export function RankingList({
           description: rs.site.description,
           url: rs.site.url,
           logoUrl: rs.site.logo_url,
-          category: rs.site.category || [], // Usa os dados do banco ou array vazio
-          registrationDate: new Date(rs.site.registration_date), // Converte a data
+          category: rs.site.category || [],
+          registrationDate: new Date(rs.site.registration_date),
           adminOwnerId: rs.site.admin_owner_id
         },
         votes: rs.votes,
@@ -120,12 +118,10 @@ export function RankingList({
     }
   };
 
-  // Efeito para buscar dados iniciais e se inscrever para atualizações
   useEffect(() => {
     if (categoryId) {
       fetchLatestData();
 
-      // Se inscreve para atualizações em tempo real
       const channel = supabase
         .channel(`ranked_sites:category=${categoryId}`)
         .on(
@@ -138,31 +134,45 @@ export function RankingList({
           },
           (payload) => {
             console.log("[RankingList] Recebida atualização em tempo real:", payload);
-            fetchLatestData(); // Atualiza os dados quando houver mudanças
+            fetchLatestData();
           }
         )
         .subscribe();
 
-      // Limpa a inscrição quando o componente é desmontado
       return () => {
         supabase.removeChannel(channel);
       };
     }
   }, [categoryId]);
 
-  // Função para atualizar o contador de votos localmente e ordenar os sites por votos
   const handleVoteUpdate = (siteId: string, newVotes: number) => {
     setSites(prevSites => {
-      // Atualiza os votos do site específico
       const updatedSites = prevSites.map(site => 
         site.siteId === siteId 
           ? { ...site, votes: newVotes }
           : site
       );
       
-      // Ordena os sites por número de votos (decrescente)
       return [...updatedSites].sort((a, b) => b.votes - a.votes);
     });
+  };
+
+  const handleSubmitSuggestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suggestionUrl.trim()) {
+      toast({
+        variant: "destructive",
+        title: "URL inválida",
+        description: "Por favor, digite um link válido.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Sugestão enviada",
+      description: "Obrigado pela sua contribuição!",
+    });
+    setSuggestionUrl('');
   };
 
   if (isLoading) {
@@ -175,7 +185,6 @@ export function RankingList({
     </div>;
   }
 
-  // Ordena os sites por número de votos (decrescente) antes de renderizar
   const sortedSites = [...sites].sort((a, b) => b.votes - a.votes);
 
   return (
@@ -197,6 +206,22 @@ export function RankingList({
             onVoteUpdate={handleVoteUpdate}
           />
         ))}
+      </div>
+
+      <div className="mt-12 pt-6 border-t border-muted">
+        <div className="text-center mb-4">
+          <p className="text-muted-foreground">Não encontrou o melhor site? Ajude os outros com seu link abaixo</p>
+        </div>
+        <form onSubmit={handleSubmitSuggestion} className="flex flex-col sm:flex-row gap-3">
+          <Input
+            type="url"
+            placeholder="https://seu-site-favorito.com"
+            value={suggestionUrl}
+            onChange={(e) => setSuggestionUrl(e.target.value)}
+            className="flex-grow"
+          />
+          <Button type="submit">Enviar</Button>
+        </form>
       </div>
     </>
   );

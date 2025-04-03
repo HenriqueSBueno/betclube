@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
 import { Check } from "lucide-react";
+
 const Home = () => {
   // Buscar categorias
   const {
