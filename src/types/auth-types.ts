@@ -5,10 +5,12 @@ export interface UserProfile {
   id: string;
   role: string;
   email: string | null;
+  username?: string;
 }
 
 export interface AuthUser extends User {
   role?: string;
+  username?: string;
 }
 
 export interface AuthContextType {
@@ -19,4 +21,6 @@ export interface AuthContextType {
   register: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
+  updateProfile?: (data: Partial<UserProfile>) => Promise<boolean>;
+  updatePassword?: (password: string) => Promise<boolean>;
 }

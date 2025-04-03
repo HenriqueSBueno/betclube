@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
+import { LogIn, LogOut, User, LayoutDashboard, Settings } from "lucide-react";
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -85,12 +85,19 @@ export function Header() {
               <DropdownMenuContent align="end">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user?.email}</p>
+                    <p className="font-medium">{user?.username || user?.email}</p>
                     <p className="text-sm text-muted-foreground">
                       {user?.role}
                     </p>
                   </div>
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center w-full">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />

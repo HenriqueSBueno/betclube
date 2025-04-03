@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import AdminDashboard from "./pages/AdminDashboard";
 import SharedRanking from "./pages/SharedRanking";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/home" element={<Home />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/shared/:token" element={<SharedRanking />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
