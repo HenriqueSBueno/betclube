@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,47 +80,6 @@ export function RankingTest({ categories }: RankingTestProps) {
     }
   };
 
-  const testEdgeFunction = async () => {
-    if (!selectedCategoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    setIsLoading(true);
-    setResult(null);
-    addLog("Starting edge function test...");
-
-    try {
-      addLog(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
-      
-      // Call the Supabase edge function directly
-      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
-        body: { 
-          category_id: selectedCategoryId,
-          site_count: parseInt(siteCount, 10),
-          min_votes: parseInt(minVotes, 10),
-          max_votes: parseInt(maxVotes, 10)
-        }
-      });
-      
-      if (error) {
-        addLog(`Edge function error: ${error.message}`);
-        toast.error(`Edge function error: ${error.message}`);
-        setResult(JSON.stringify({ error }, null, 2));
-      } else {
-        addLog(`Edge function call successful. Result: ${JSON.stringify(data)}`);
-        toast.success("Edge function call successful!");
-        setResult(JSON.stringify(data, null, 2));
-      }
-    } catch (error) {
-      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
-      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
-      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const testApiEndpoint = async () => {
     if (!selectedCategoryId) {
       toast.error("Please select a category");
@@ -183,10 +141,51 @@ export function RankingTest({ categories }: RankingTestProps) {
     }
   };
 
+  const testEdgeFunction = async () => {
+    if (!selectedCategoryId) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    setIsLoading(true);
+    setResult(null);
+    addLog("Starting edge function test...");
+
+    try {
+      addLog(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
+      
+      // Call the Supabase edge function directly
+      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
+        body: { 
+          category_id: selectedCategoryId,
+          site_count: parseInt(siteCount, 10),
+          min_votes: parseInt(minVotes, 10),
+          max_votes: parseInt(maxVotes, 10)
+        }
+      });
+      
+      if (error) {
+        addLog(`Edge function error: ${error.message}`);
+        toast.error(`Edge function error: ${error.message}`);
+        setResult(JSON.stringify({ error }, null, 2));
+      } else {
+        addLog(`Edge function call successful. Result: ${JSON.stringify(data)}`);
+        toast.success("Edge function call successful!");
+        setResult(JSON.stringify(data, null, 2));
+      }
+    } catch (error) {
+      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
+      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Ranking Generation Test</CardTitle>
+        <CardTitle>Gerar Rankings</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
@@ -247,7 +246,7 @@ export function RankingTest({ categories }: RankingTestProps) {
               {isLoading ? "Testing..." : "Test API Endpoint"}
             </Button>
             <Button onClick={testEdgeFunction} variant="outline" disabled={isLoading}>
-              {isLoading ? "Testing..." : "Test Edge Function"}
+              {isLoading ? "Testing..." : "Gerar Ranking"}
             </Button>
           </div>
           

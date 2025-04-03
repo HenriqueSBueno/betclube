@@ -82,62 +82,9 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
         </Card>
       ) : (
         <>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Select Category</CardTitle>
-              <CardDescription>
-                Choose a category to generate or update its ranking
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Select
-                value={selectedCategoryId}
-                onValueChange={setSelectedCategoryId}
-              >
-                <SelectTrigger className="w-full md:w-[240px]">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+          {/* The Select Category and Generate Sports Ranking sections are now hidden */}
           
-          {selectedCategory && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Generate {selectedCategory.name} Ranking</CardTitle>
-                <CardDescription>
-                  Configure and generate the ranking for {selectedCategory.name}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <GenerateRankingsForm 
-                  categories={filteredCategories}
-                  onRankingGenerated={handleGenerationSuccess}
-                />
-                
-                {categoryRanking && (
-                  <div className="mt-6 pt-6 border-t">
-                    <h4 className="font-medium mb-2">Current Ranking Info</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Last generated: {new Date(categoryRanking.generationDate).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Sites: {categoryRanking.sites.length}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Add the testing component */}
+          {/* Only show the renamed Ranking Test section */}
           <RankingTest categories={categories} />
         </>
       )}
