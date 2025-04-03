@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RankingCategory, DailyRanking } from "@/types";
 import { RankingList } from "./ranking-list";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RankingTabsProps {
   categories: RankingCategory[];
@@ -12,6 +14,7 @@ interface RankingTabsProps {
 
 export function RankingTabs({ categories, rankings, onVote, isInteractive = true }: RankingTabsProps) {
   const [activeTab, setActiveTab] = useState(categories[0]?.id || "");
+  const isMobile = useIsMobile();
 
   return (
     <Tabs 
@@ -19,12 +22,12 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
       onValueChange={setActiveTab}
       className="w-full"
     >
-      <TabsList className="grid grid-cols-3 mb-8">
+      <TabsList className={`grid ${categories.length <= 3 ? `grid-cols-${categories.length}` : isMobile ? 'grid-cols-2' : 'grid-cols-3'} mb-6 sm:mb-8 overflow-x-auto`}>
         {categories.map((category) => (
           <TabsTrigger 
             key={category.id} 
             value={category.id}
-            className="text-base"
+            className="text-xs sm:text-sm md:text-base py-2 px-2 sm:px-4 whitespace-nowrap"
           >
             {category.name}
           </TabsTrigger>
@@ -32,7 +35,7 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
       </TabsList>
       
       {categories.map((category) => (
-        <TabsContent key={category.id} value={category.id}>
+        <TabsContent key={category.id} value={category.id} className="min-h-[40vh]">
           <RankingList 
             categoryId={category.id}
             onVote={onVote}

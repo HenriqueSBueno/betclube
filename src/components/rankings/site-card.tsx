@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, TrendingUp } from "lucide-react";
@@ -7,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { VotingService } from "@/services/voting-service";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +38,7 @@ export function SiteCard({
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [remainingVotes, setRemainingVotes] = useState(3);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
@@ -116,7 +119,7 @@ export function SiteCard({
           : ''
       }`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center sm:flex-col gap-2 sm:gap-3">
+          <div className={`flex ${isMobile ? 'flex-row justify-between w-full' : 'items-center sm:flex-col'} gap-2 sm:gap-3`}>
             <div className={`text-2xl font-bold ${
               isTopThree 
                 ? 'text-amber-500 dark:text-amber-400' 
@@ -130,7 +133,7 @@ export function SiteCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`flex items-center gap-1 w-full sm:w-auto ${
+                    className={`flex items-center gap-1 ${isMobile ? 'w-auto px-3' : 'w-full sm:w-auto'} ${
                       hasVoted 
                         ? 'bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700'
                         : remainingVotes <= 0
@@ -143,7 +146,7 @@ export function SiteCard({
                     disabled={isVoting || hasVoted || remainingVotes <= 0}
                   >
                     <ArrowUp className="h-4 w-4" />
-                    <span className="hidden sm:inline">Votar</span>
+                    <span className={isMobile ? 'sr-only' : 'hidden sm:inline'}>Votar</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -161,7 +164,7 @@ export function SiteCard({
           <div className="flex-1 w-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-medium">
+                <h3 className="text-lg font-medium line-clamp-1">
                   {rankedSite.site.name}
                 </h3>
                 {isTopThree && (
@@ -173,7 +176,7 @@ export function SiteCard({
               <Button 
                 variant="outline"
                 size="sm"
-                className={`w-full sm:w-auto ${
+                className={`w-full sm:w-auto mt-2 sm:mt-0 ${
                   isTopThree 
                     ? 'bg-amber-400 hover:bg-amber-500 dark:bg-amber-500 dark:hover:bg-amber-600 text-black dark:text-white border-none' 
                     : ''
@@ -190,7 +193,7 @@ export function SiteCard({
               </Button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2 sm:line-clamp-none">
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
               {rankedSite.site.description}
             </p>
 
