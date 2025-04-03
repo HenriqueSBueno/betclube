@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { RankingTabs } from "@/components/rankings/ranking-tabs";
@@ -48,10 +49,10 @@ const Index = () => {
                 <Check className="h-4 w-4" /> 100% Gratuito
               </div>
               <h1 className="text-4xl font-bold tracking-tight mb-3">
-                Betclub Rankings
+                Ranking de hoje
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Discover the top betting sites as voted by our community. Updated daily.
+                As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.
               </p>
             </div>
             
