@@ -44,9 +44,7 @@ const Home = () => {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 bg-green-100 text-green-600 text-sm font-medium rounded-full">
             <Check className="h-4 w-4" /> 100% Gratuito
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-3">
-            Betclub Rankings
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-3">Ranking de hoje</h1>
           <p className="text-xl max-w-2xl mx-auto font-normal text-inherit">As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.</p>
         </div>
         
