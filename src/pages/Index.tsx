@@ -45,7 +45,7 @@ const Index = () => {
           <>
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold tracking-tight mb-3">
-                Betting Buzz Rankings
+                Betclub Rankings
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Discover the top betting sites as voted by our community. Updated daily.

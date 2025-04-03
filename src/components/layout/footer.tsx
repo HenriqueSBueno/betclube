@@ -7,10 +7,10 @@ export function Footer() {
       <div className="container flex flex-col items-center gap-4 md:flex-row md:justify-between">
         <div className="text-center md:text-left">
           <Link to="/" className="font-bold">
-            Betting Buzz
+            Betclub
           </Link>
           <p className="text-sm text-muted-foreground mt-1">
-            © {new Date().getFullYear()} Betting Buzz Rankings. All rights reserved.
+            © {new Date().getFullYear()} Betclub Rankings. All rights reserved.
           </p>
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
