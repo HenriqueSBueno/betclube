@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, TrendingUp, Flame } from "lucide-react";
+import { ArrowUp, TrendingUp, Flame, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { RankedSite } from "@/types";
 import { useAuth } from "@/lib/auth";
@@ -139,10 +139,17 @@ export function SiteCard({
                     <TrendingUp className="h-3 w-3 mr-1" /> Em Alta
                   </span>}
               </div>
-              <Button variant={isTopThree ? "custom" : "outline"} size="sm" className={`w-full sm:w-auto mt-2 sm:mt-0 visit-button ${isTopThree ? 'bg-secondary hover:bg-secondary/90 dark:bg-secondary dark:hover:bg-secondary/90 text-white dark:text-white border-none' : ''} animate-[pulse_3s_infinite]`} asChild>
-                <a href={rankedSite.site.url} target="_blank" rel="noopener noreferrer">
+              <Button 
+                variant={isTopThree ? "custom" : "outline"} 
+                size="sm" 
+                className={`w-full sm:w-auto mt-2 sm:mt-0 group relative overflow-hidden transition-all duration-300 ${isTopThree ? 'bg-secondary hover:bg-secondary/90 dark:bg-secondary dark:hover:bg-secondary/90 text-white dark:text-white border-none' : ''}`} 
+                asChild
+              >
+                <a href={rankedSite.site.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                   {isTopThree && <span className="flame-icon mr-1"><Flame size={16} className="text-primary" /></span>}
-                  Visitar Site <span className="text-xs ml-1 opacity-75">(Atualizado em tempo real)</span>
+                  Visitar Site
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <span className="absolute inset-0 z-0 bg-gradient-to-r from-secondary via-secondary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </a>
               </Button>
             </div>
