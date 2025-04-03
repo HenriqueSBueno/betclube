@@ -20,6 +20,7 @@ export function Header() {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
 
   const getUserInitials = () => {
+    if (user?.username) return user.username.charAt(0).toUpperCase();
     if (!user?.email) return "U";
     return user.email.charAt(0).toUpperCase();
   };

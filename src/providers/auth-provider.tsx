@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
@@ -81,6 +82,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Add isAdmin function to check if the user has admin role
   const isAdmin = () => {
     return user?.role === 'admin';
+  };
+
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    try {
+      if (!user?.id) return false;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local user state with new data
+      setUser(prev => prev ? { ...prev, ...data } : null);
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully',
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: error.message || 'Failed to update profile',
+      });
+      return false;
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Password updated',
+        description: 'Your password has been updated successfully',
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: error.message || 'Failed to update password',
+      });
+      return false;
+    }
   };
 
   const login = async (email: string, password: string) => {
@@ -167,7 +224,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
-    isAdmin
+    isAdmin,
+    updateProfile,
+    updatePassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -21,6 +21,6 @@ export interface AuthContextType {
   register: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
-  updateProfile?: (data: Partial<UserProfile>) => Promise<boolean>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
   updatePassword?: (password: string) => Promise<boolean>;
 }

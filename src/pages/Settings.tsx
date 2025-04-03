@@ -4,9 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/lib/auth";
-import { UserService } from "@/services/user-service";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/header";
 
 import {
@@ -49,7 +46,7 @@ const passwordFormSchema = z.object({
 });
 
 export default function SettingsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateProfile, updatePassword } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
@@ -81,21 +78,15 @@ export default function SettingsPage() {
     setGeneralError(null);
     
     try {
-      // Update profile in Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: values.username,
-          email: values.email,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+      const success = await updateProfile({
+        username: values.username,
+        email: values.email,
       });
+      
+      if (!success) {
+        throw new Error("Failed to update profile");
+      }
+      
     } catch (error: any) {
       console.error("Error updating profile:", error);
       setGeneralError(error.message || "Failed to update profile. Please try again.");
@@ -109,17 +100,11 @@ export default function SettingsPage() {
     setPasswordError(null);
     
     try {
-      // Update password in Supabase
-      const { error } = await supabase.auth.updateUser({ 
-        password: values.newPassword 
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Password updated",
-        description: "Your password has been updated successfully.",
-      });
+      const success = await updatePassword?.(values.newPassword);
+      
+      if (!success) {
+        throw new Error("Failed to update password");
+      }
       
       // Reset form
       passwordForm.reset({
