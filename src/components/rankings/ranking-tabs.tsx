@@ -22,12 +22,12 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
       onValueChange={setActiveTab}
       className="w-full"
     >
-      <TabsList className={`grid ${categories.length <= 3 ? `grid-cols-${categories.length}` : isMobile ? 'grid-cols-2' : 'grid-cols-3'} mb-6 sm:mb-8 overflow-x-auto`}>
+      <TabsList className={`grid ${categories.length <= 3 ? `grid-cols-${categories.length}` : isMobile ? 'grid-cols-2' : 'grid-cols-3'} mb-6 sm:mb-8 overflow-x-auto bg-secondary/20 dark:bg-secondary/20`}>
         {categories.map((category) => (
           <TabsTrigger 
             key={category.id} 
             value={category.id}
-            className="text-xs sm:text-sm md:text-base py-2 px-2 sm:px-4 whitespace-nowrap"
+            className="text-xs sm:text-sm md:text-base py-2 px-2 sm:px-4 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-background dark:data-[state=active]:text-background"
           >
             {category.name}
           </TabsTrigger>

@@ -54,6 +54,10 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				custom: {
+					'dark-blue': '#011b2d',
+					'teal': '#015363',
+					'green': '#017e5e',
+					'gold': '#e59f35',
 					'light-gray': '#F3F3F3',
 					'cream': '#E8E6D6',
 					'tan': '#CFCBA9',
@@ -96,12 +100,17 @@ export default {
 				'vote': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-5px)' }
+				},
+				'flame': {
+					'0%, 100%': { transform: 'scale(1)', opacity: '0.9' },
+					'50%': { transform: 'scale(1.1)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'vote': 'vote 0.3s ease-in-out'
+				'vote': 'vote 0.3s ease-in-out',
+				'flame': 'flame 1.5s ease-in-out infinite'
 			}
 		}
 	},

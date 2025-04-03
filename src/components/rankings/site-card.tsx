@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, TrendingUp } from "lucide-react";
+import { ArrowUp, TrendingUp, Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { RankedSite } from "@/types";
 import { useAuth } from "@/lib/auth";
@@ -109,23 +109,23 @@ export function SiteCard({
       key={rankedSite.siteId} 
       className={`overflow-hidden transition-all ${
         isTopThree 
-          ? 'border-yellow-400 dark:border-yellow-500 border-2 shadow-lg' 
+          ? 'border-primary dark:border-primary border-2 shadow-lg' 
           : ''
       }`}
     >
       <CardContent className={`p-4 ${
         isTopThree 
-          ? 'bg-amber-50 dark:bg-amber-950/50' 
+          ? 'bg-primary/10 dark:bg-primary/5' 
           : ''
       }`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className={`flex ${isMobile ? 'flex-row justify-between w-full' : 'items-center sm:flex-col'} gap-2 sm:gap-3`}>
             <div className={`text-2xl font-bold ${
               isTopThree 
-                ? 'text-amber-500 dark:text-amber-400' 
+                ? 'text-primary dark:text-primary' 
                 : 'text-primary'
             }`}>
-              #{index + 1}
+              {index + 1}
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -135,11 +135,11 @@ export function SiteCard({
                     variant="outline"
                     className={`flex items-center gap-1 ${isMobile ? 'w-auto px-3' : 'w-full sm:w-auto'} ${
                       hasVoted 
-                        ? 'bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700'
+                        ? 'bg-accent hover:bg-accent/90 dark:bg-accent dark:hover:bg-accent/90'
                         : remainingVotes <= 0
-                          ? 'bg-gray-400 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700'
-                          : 'bg-amber-400 hover:bg-amber-500 dark:bg-amber-500 dark:hover:bg-amber-600'
-                    } text-black dark:text-white border-none ${
+                          ? 'bg-muted hover:bg-muted/90 dark:bg-muted dark:hover:bg-muted/90'
+                          : 'bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90'
+                    } text-black dark:text-black border-none ${
                       isVoting ? 'opacity-50 cursor-not-allowed' : ''
                     } vote-button`}
                     onClick={handleVote}
@@ -168,17 +168,17 @@ export function SiteCard({
                   {rankedSite.site.name}
                 </h3>
                 {isTopThree && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-400 dark:bg-amber-500 text-black dark:text-white">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary dark:bg-primary text-background dark:text-background">
                     <TrendingUp className="h-3 w-3 mr-1" /> Trending
                   </span>
                 )}
               </div>
               <Button 
-                variant="outline"
+                variant={isTopThree ? "custom" : "outline"}
                 size="sm"
-                className={`w-full sm:w-auto mt-2 sm:mt-0 ${
+                className={`w-full sm:w-auto mt-2 sm:mt-0 visit-button ${
                   isTopThree 
-                    ? 'bg-amber-400 hover:bg-amber-500 dark:bg-amber-500 dark:hover:bg-amber-600 text-black dark:text-white border-none' 
+                    ? 'bg-secondary hover:bg-secondary/90 dark:bg-secondary dark:hover:bg-secondary/90 text-white dark:text-white border-none' 
                     : ''
                 }`}
                 asChild
@@ -188,6 +188,7 @@ export function SiteCard({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  {isTopThree && <span className="flame-icon mr-1"><Flame size={16} className="text-primary" /></span>}
                   Visitar Site
                 </a>
               </Button>
