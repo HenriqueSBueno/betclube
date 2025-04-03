@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, TrendingUp, Flame } from "lucide-react";
@@ -21,9 +22,9 @@ interface SiteCardProps {
 
 const formatVotes = (votes: number): string => {
   if (votes >= 1000000) {
-    return `${(votes / 1000000).toFixed(1)}M`;
+    return `${(votes / 1000000).toFixed(1)} milhões`;
   } else if (votes >= 1000) {
-    return `${(votes / 1000).toFixed(1)}K`;
+    return `${(votes / 1000).toFixed(1)} mil`;
   }
   return votes.toString();
 };
