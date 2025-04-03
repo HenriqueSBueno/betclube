@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -6,9 +7,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Trophy, Users, Star, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SiteSuggestionForm } from "./site-suggestion-form";
+
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const isMobile = useIsMobile();
+  
   return <div className="flex flex-col items-center">
       <section className="relative w-full py-12 md:py-24 lg:py-32">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5dff9_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
@@ -37,6 +41,15 @@ export function LandingPage() {
                   <span className="absolute inset-0 z-0 bg-gradient-to-r from-secondary via-secondary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </Link>
               </Button>
+            </div>
+            
+            {/* Sugestão de Sites */}
+            <div className="mt-8 w-full">
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-semibold">Não encontrou a sua bet favorita?</h2>
+                <p className="text-muted-foreground">Sugira um novo site para nossa análise</p>
+              </div>
+              <SiteSuggestionForm />
             </div>
           </div>
         </div>

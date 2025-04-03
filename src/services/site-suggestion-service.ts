@@ -13,6 +13,8 @@ export interface SiteSuggestion {
 export class SiteSuggestionService {
   static async submitSuggestion(url: string): Promise<{ success: boolean; message: string }> {
     try {
+      console.log("Submitting site suggestion:", url);
+      
       // Get client IP address from request headers (will be populated by Supabase)
       const { data, error } = await supabase.rpc(
         'submit_site_suggestion' as any, 
@@ -22,7 +24,12 @@ export class SiteSuggestionService {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      
+      console.log("Suggestion submitted successfully:", data);
       return data as { success: boolean; message: string } || { success: true, message: "Sugestão enviada com sucesso!" };
     } catch (error: any) {
       console.error("Error submitting suggestion:", error);
@@ -35,13 +42,19 @@ export class SiteSuggestionService {
 
   static async getAllSuggestions(): Promise<SiteSuggestion[]> {
     try {
+      console.log("Fetching all suggestions");
+      
       const { data, error } = await supabase
         .from('site_suggestions' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
+      console.log("Suggestions fetched:", data);
       return (data as unknown as SiteSuggestion[]) || [];
     } catch (error) {
       console.error("Error fetching suggestions:", error);
