@@ -8,43 +8,59 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmailVerificationNotice } from "./email-verification-notice";
+import { 
+  Form, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl,
+  FormMessage
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 interface RegisterFormProps {
   onToggleForm: () => void;
   onRegisterSuccess?: () => void;
 }
 
+// Define validation schema for the registration form
+const registerFormSchema = z.object({
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  confirmPassword: z.string().min(1, "Confirmar senha é obrigatório")
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"]
+});
+
+type RegisterFormValues = z.infer<typeof registerFormSchema>;
+
 export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormProps) {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const { register } = useAuth();
+  
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    }
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      setPasswordError("As senhas não coincidem");
-      return;
-    }
-    
-    if (!username.trim()) {
-      setError("Nome de usuário é obrigatório");
-      return;
-    }
-    
-    setPasswordError("");
+  const handleSubmit = async (values: RegisterFormValues) => {
     setError(null);
     setIsLoading(true);
     
     try {
-      console.log("Submitting registration with username:", username);
-      const success = await register(email, password, username);
+      console.log("Submitting registration with username:", values.username);
+      const success = await register(values.email, values.password, values.username);
       if (success) {
         setRegistrationComplete(true);
         if (onRegisterSuccess) {
@@ -59,7 +75,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
   };
 
   if (registrationComplete) {
-    return <EmailVerificationNotice email={email} onBack={onToggleForm} />;
+    return <EmailVerificationNotice email={form.getValues().email} onBack={onToggleForm} />;
   }
 
   return (
@@ -70,81 +86,109 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
           Crie uma conta para começar a votar
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erro</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="username">Nome de Usuário</Label>
-            <Input
-              id="username"
-              type="text"
-              placeholder="Seu nome de usuário"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-            {passwordError && (
-              <p className="text-sm text-destructive">{passwordError}</p>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
-            {isLoading ? "Registrando..." : "Registrar"}
-          </Button>
-          <div className="text-sm text-center mt-2">
-            Já tem uma conta?{" "}
-            <Button variant="link" onClick={onToggleForm} className="p-0">
-              Entrar
+            
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome de Usuário</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Seu nome de usuário"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="seu@email.com"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar Senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-2">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Registrando..." : "Registrar"}
             </Button>
-          </div>
-        </CardFooter>
-      </form>
+            <div className="text-sm text-center mt-2">
+              Já tem uma conta?{" "}
+              <Button variant="link" onClick={onToggleForm} className="p-0">
+                Entrar
+              </Button>
+            </div>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }
