@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RankingCategory, DailyRanking } from "@/types";
@@ -48,8 +47,7 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
                   </p>
                 </div>
                 <RankingList 
-                  ranking={ranking} 
-                  sites={ranking.sites}
+                  categoryId={category.id}
                   onVote={onVote}
                   isInteractive={isInteractive}
                 />
