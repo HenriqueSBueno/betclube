@@ -1,7 +1,6 @@
 
-import { rankingCategories } from './models';
+import { rankingCategories, bettingSites } from './models';
 import { RankingCategory } from '@/types';
-import { mockDb } from './index';
 
 export const categoryService = {
   getAll: () => [...rankingCategories],
@@ -33,12 +32,20 @@ export const categoryService = {
         console.log(`Mock DB: Updating category name from '${oldName}' to '${newName}'`);
         
         // Update category name in all sites
-        mockDb.bettingSites.getAll().forEach(site => {
+        bettingSites.forEach(site => {
           if (site.category.includes(oldName)) {
             const updatedCategories = site.category.map(cat => 
               cat === oldName ? newName : cat
             );
-            mockDb.bettingSites.update(site.id, { category: updatedCategories });
+            
+            // Update the site's categories directly in the bettingSites array
+            const siteIndex = bettingSites.findIndex(s => s.id === site.id);
+            if (siteIndex !== -1) {
+              bettingSites[siteIndex] = {
+                ...bettingSites[siteIndex],
+                category: updatedCategories
+              };
+            }
           }
         });
       }
