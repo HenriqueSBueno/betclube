@@ -136,13 +136,13 @@ export function SiteCard({
                   {rankedSite.site.name}
                 </h3>
                 {isTopThree && <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary dark:bg-primary text-background dark:text-background">
-                    <TrendingUp className="h-3 w-3 mr-1" /> Trending
+                    <TrendingUp className="h-3 w-3 mr-1" /> Em Alta
                   </span>}
               </div>
-              <Button variant={isTopThree ? "custom" : "outline"} size="sm" className={`w-full sm:w-auto mt-2 sm:mt-0 visit-button ${isTopThree ? 'bg-secondary hover:bg-secondary/90 dark:bg-secondary dark:hover:bg-secondary/90 text-white dark:text-white border-none' : ''}`} asChild>
+              <Button variant={isTopThree ? "custom" : "outline"} size="sm" className={`w-full sm:w-auto mt-2 sm:mt-0 visit-button ${isTopThree ? 'bg-secondary hover:bg-secondary/90 dark:bg-secondary dark:hover:bg-secondary/90 text-white dark:text-white border-none' : ''} animate-[pulse_3s_infinite]`} asChild>
                 <a href={rankedSite.site.url} target="_blank" rel="noopener noreferrer">
                   {isTopThree && <span className="flame-icon mr-1"><Flame size={16} className="text-primary" /></span>}
-                  Visitar Site
+                  Visitar Site <span className="text-xs ml-1 opacity-75">(Atualizado em tempo real)</span>
                 </a>
               </Button>
             </div>

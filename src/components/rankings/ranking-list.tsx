@@ -23,6 +23,7 @@ export function RankingList({
   const [sites, setSites] = useState<RankedSite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentRankingId, setCurrentRankingId] = useState<string | null>(null);
+  const [categoryName, setCategoryName] = useState<string>("");
   const { toast } = useToast();
 
   // Função para buscar os dados mais recentes
@@ -58,6 +59,7 @@ export function RankingList({
       }
 
       setCurrentRankingId(ranking.id);
+      setCategoryName(ranking.category_name);
 
       // Busca os sites do ranking com todos os detalhes necessários
       const { data: rankedSites, error: sitesError } = await supabase
@@ -180,7 +182,7 @@ export function RankingList({
     <>
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold mb-2">
-          Top {sortedSites.length} Sites de Apostas
+          Top {sortedSites.length} Sites de {categoryName || "Apostas"}
         </h2>
       </div>
       <div className="space-y-4">

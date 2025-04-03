@@ -47,13 +47,13 @@ const Home = () => {
             Betclub Rankings
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover the top betting sites as voted by our community. Updated daily.
+            Descubra os melhores sites de apostas votados pela nossa comunidade. Atualizado diariamente.
           </p>
         </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-pulse text-lg">Loading rankings...</div>
+            <div className="animate-pulse text-lg">Carregando rankings...</div>
           </div>
         ) : (
           <div className="relative">
