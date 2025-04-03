@@ -15,6 +15,7 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormProps) {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +38,7 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
     setIsLoading(true);
     
     try {
-      const success = await register(email, password);
+      const success = await register(email, password, username);
       if (success) {
         setRegistrationComplete(true);
         if (onRegisterSuccess) {
@@ -72,6 +73,18 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          <div className="space-y-2">
+            <Label htmlFor="username">Nome de Usuário</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="Seu nome de usuário"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
