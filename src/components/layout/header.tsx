@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthModal } from "@/components/auth/auth-modal";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -59,7 +59,7 @@ export function Header() {
               Rankings
             </Link>
             
-            {isAuthenticated && isAdmin && (
+            {isAuthenticated && isAdmin() && (
               <Link 
                 to="/admin" 
                 className="flex items-center space-x-1 text-sm font-medium hover:underline text-primary"
@@ -93,6 +93,14 @@ export function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
+                {isAdmin() && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="flex items-center w-full">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="flex items-center w-full">
                     <Settings className="mr-2 h-4 w-4" />
