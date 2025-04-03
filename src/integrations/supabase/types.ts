@@ -244,6 +244,33 @@ export type Database = {
           },
         ]
       }
+      site_suggestions: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string
+          status: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip: string
+          status?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string
+          status?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           id: string
@@ -291,6 +318,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_suggestion_rate_limit: {
+        Args: {
+          ip_address: string
+        }
+        Returns: boolean
+      }
       delete_rankings_by_category: {
         Args: {
           p_category_id: string
@@ -330,6 +363,13 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      submit_site_suggestion: {
+        Args: {
+          url_input: string
+          ip_address: string
+        }
+        Returns: Json
       }
     }
     Enums: {

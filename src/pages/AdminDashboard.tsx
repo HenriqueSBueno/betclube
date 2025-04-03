@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
@@ -8,6 +7,7 @@ import { UserManagement } from "@/components/admin/user-management";
 import { SiteManagement } from "@/components/admin/site-management";
 import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
+import { SiteSuggestionManagement } from "@/components/admin/site-suggestions-management";
 import { TestSiteAdd } from "@/components/admin/test-site-add";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,6 @@ const AdminDashboard = () => {
   const [categories, setCategories] = useState<RankingCategory[]>([]);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  // Verificar permissões de acesso usando useEffect
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || !isAdmin())) {
       toast({
@@ -33,13 +32,11 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated, isLoading, isAdmin, toast]);
 
-  // Função para forçar atualização de dados quando algo muda
   const handleDataChange = () => {
     console.log("Atualizando dados em AdminDashboard");
     setRefreshKey(prevKey => prevKey + 1);
   };
 
-  // Carregar categorias quando o componente for montado
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -84,6 +81,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="sites">Betting Sites</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="rankings">Rankings</TabsTrigger>
+            <TabsTrigger value="suggestions">Site Suggestions</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
           </TabsList>
           
@@ -98,6 +96,10 @@ const AdminDashboard = () => {
           
           <TabsContent value="rankings">
             <RankingsManagement categories={categories} onDataChange={handleDataChange} />
+          </TabsContent>
+          
+          <TabsContent value="suggestions">
+            <SiteSuggestionManagement />
           </TabsContent>
           
           <TabsContent value="users">
