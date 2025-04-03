@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/footer";
 import { RankingTabs } from "@/components/rankings/ranking-tabs";
 import { RankingCategory, DailyRanking } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth"; // Updated import path
 import { LandingPage } from "@/components/landing/landing-page";
 import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
