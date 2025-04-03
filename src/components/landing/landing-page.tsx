@@ -24,7 +24,7 @@ export function LandingPage() {
             </div>
             <div className="space-y-3">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl/none lg:text-6xl/none">
-                Descubra os <span className="text-primary">Melhores Sites</span> de Apostas
+                Descubra as <span className="text-primary">Melhores Bets e Apps</span>
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                 Junte-se à nossa comunidade e vote nos seus sites de apostas favoritos. Veja as recomendações de outros usuários e tome decisões informadas.
