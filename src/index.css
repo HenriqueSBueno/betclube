@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -152,6 +153,8 @@
 /* Add hover effect for the "Ir agora!" text */
 .visit-button-text {
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
 }
 
 .visit-button:hover .visit-button-text-static {
@@ -160,4 +163,5 @@
 
 .visit-button:hover .visit-button-text-hover {
   opacity: 1;
+  z-index: 20;
 }
