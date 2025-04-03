@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SiteCard } from "./site-card";
 import { RankedSite, DailyRanking } from "@/types";
@@ -78,7 +79,7 @@ export function RankingList({
           )
         `)
         .eq("ranking_id", ranking.id)
-        .order("position", { ascending: true });
+        .order("votes", { ascending: false }); // Mudado para ordenar por votos em ordem decrescente
 
       if (sitesError) {
         console.error("[RankingList] Erro ao buscar sites:", sitesError);
@@ -147,15 +148,19 @@ export function RankingList({
     }
   }, [categoryId]);
 
-  // Função para atualizar o contador de votos localmente
+  // Função para atualizar o contador de votos localmente e ordenar os sites por votos
   const handleVoteUpdate = (siteId: string, newVotes: number) => {
-    setSites(prevSites => 
-      prevSites.map(site => 
+    setSites(prevSites => {
+      // Atualiza os votos do site específico
+      const updatedSites = prevSites.map(site => 
         site.siteId === siteId 
           ? { ...site, votes: newVotes }
           : site
-      )
-    );
+      );
+      
+      // Ordena os sites por número de votos (decrescente)
+      return [...updatedSites].sort((a, b) => b.votes - a.votes);
+    });
   };
 
   if (isLoading) {
@@ -168,20 +173,23 @@ export function RankingList({
     </div>;
   }
 
+  // Ordena os sites por número de votos (decrescente) antes de renderizar
+  const sortedSites = [...sites].sort((a, b) => b.votes - a.votes);
+
   return (
     <>
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold mb-2">
-          Top {sites.length} Sites de Apostas
+          Top {sortedSites.length} Sites de Apostas
         </h2>
       </div>
       <div className="space-y-4">
-        {sites.map((site, index) => (
+        {sortedSites.map((site, index) => (
           <SiteCard
             key={site.siteId}
             rankedSite={site}
             index={index}
-            maxVotes={100}
+            maxVotes={Math.max(...sortedSites.map(s => s.votes))}
             isTopThree={index < 3}
             rankingId={currentRankingId || ""}
             onVoteUpdate={handleVoteUpdate}
