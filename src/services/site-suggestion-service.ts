@@ -42,7 +42,7 @@ export class SiteSuggestionService {
 
       if (error) throw error;
       
-      return data as SiteSuggestion[] || [];
+      return (data as unknown as SiteSuggestion[]) || [];
     } catch (error) {
       console.error("Error fetching suggestions:", error);
       return [];
