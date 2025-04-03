@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -7,13 +6,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Trophy, Users, Star, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const isMobile = useIsMobile();
-  
-  return (
-    <div className="flex flex-col items-center">
+  return <div className="flex flex-col items-center">
       <section className="relative w-full py-12 md:py-24 lg:py-32">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5dff9_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
         <div className="container px-4 md:px-6">
@@ -26,24 +22,13 @@ export function LandingPage() {
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl/none lg:text-6xl/none">
                 Descubra as <span className="text-primary">Melhores Bets e Apps</span>
               </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Junte-se à nossa comunidade e vote nos seus sites de apostas favoritos. Veja as recomendações de outros usuários e tome decisões informadas.
-              </p>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">Junte-se à nossa comunidade e vote na melhor Bet do dia. Veja as recomendações de outros usuários e tome a melhor decisão</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-              <Button 
-                size={isMobile ? "default" : "lg"} 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="w-full sm:w-auto"
-              >
+              <Button size={isMobile ? "default" : "lg"} onClick={() => setIsAuthModalOpen(true)} className="w-full sm:w-auto">
                 Comece Agora
               </Button>
-              <Button 
-                size={isMobile ? "default" : "lg"}
-                variant="secondary"
-                className="w-full sm:w-auto group relative overflow-hidden transition-all duration-300"
-                asChild
-              >
+              <Button size={isMobile ? "default" : "lg"} variant="secondary" className="w-full sm:w-auto group relative overflow-hidden transition-all duration-300" asChild>
                 <Link to="/home">
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Ver Rankings
@@ -111,21 +96,13 @@ export function LandingPage() {
             <p className="max-w-[700px] text-lg text-muted-foreground mb-8">
               O Betclub é e sempre será 100% gratuito para todos os usuários. Sem taxas, sem assinaturas, sem limitações.
             </p>
-            <Button 
-              size="lg" 
-              onClick={() => setIsAuthModalOpen(true)}
-              className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md"
-            >
+            <Button size="lg" onClick={() => setIsAuthModalOpen(true)} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md">
               Crie Sua Conta Grátis Agora
             </Button>
           </div>
         </div>
       </section>
       
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
-    </div>
-  );
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </div>;
 }
