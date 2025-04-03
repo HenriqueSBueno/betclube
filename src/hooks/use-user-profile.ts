@@ -5,6 +5,8 @@ import { AuthUser, UserProfile } from "@/types/auth-types";
 
 export const fetchUserProfile = async (userId: string, userObj: User): Promise<AuthUser> => {
   try {
+    console.log("Fetching user profile for:", userId);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('role, email, username')
@@ -15,6 +17,8 @@ export const fetchUserProfile = async (userId: string, userObj: User): Promise<A
       console.error('Error fetching user profile:', error);
       return { ...userObj, role: 'user' } as AuthUser;
     }
+    
+    console.log("User profile data:", data);
     
     const profile = data as Partial<UserProfile> || {};
     

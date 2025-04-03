@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,11 +33,17 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
       return;
     }
     
+    if (!username.trim()) {
+      setError("Nome de usuário é obrigatório");
+      return;
+    }
+    
     setPasswordError("");
     setError(null);
     setIsLoading(true);
     
     try {
+      console.log("Submitting registration with username:", username);
       const success = await register(email, password, username);
       if (success) {
         setRegistrationComplete(true);

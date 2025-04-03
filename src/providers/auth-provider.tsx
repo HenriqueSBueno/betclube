@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
@@ -164,13 +163,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, username?: string) => {
     try {
+      console.log("[AuthProvider] Registering user with username:", username);
+      
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin,
           data: {
-            username: username
+            username
           }
         }
       });
@@ -186,10 +187,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If user is created, update the profile with the username
       if (data?.user && username) {
-        await supabase
+        console.log("[AuthProvider] Creating profile for user:", data.user.id, "with username:", username);
+        const { error: profileError } = await supabase
           .from('profiles')
-          .update({ username })
-          .eq('id', data.user.id);
+          .upsert({ 
+            id: data.user.id,
+            username: username,
+            email: email,
+            role: 'user'
+          });
+          
+        if (profileError) {
+          console.error("[AuthProvider] Error creating profile:", profileError);
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao criar perfil',
+            description: profileError.message,
+          });
+        }
       }
 
       toast({
