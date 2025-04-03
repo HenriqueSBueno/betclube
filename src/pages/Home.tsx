@@ -47,7 +47,7 @@ const Home = () => {
           <h1 className="text-4xl font-bold tracking-tight mb-3">
             Betclub Rankings
           </h1>
-          <p className="text-xl max-w-2xl mx-auto font-normal text-custom-teal">As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.</p>
+          <p className="text-xl max-w-2xl mx-auto font-normal text-inherit">As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.</p>
         </div>
         
         {isLoading ? <div className="flex justify-center items-center py-12">
