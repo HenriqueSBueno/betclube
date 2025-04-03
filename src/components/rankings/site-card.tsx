@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { VotingService } from "@/services/voting-service";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface SiteCardProps {
   rankedSite: RankedSite;
   index: number;
@@ -17,6 +18,16 @@ interface SiteCardProps {
   rankingId: string;
   onVoteUpdate: (siteId: string, newVotes: number) => void;
 }
+
+const formatVotes = (votes: number): string => {
+  if (votes >= 1000000) {
+    return `${(votes / 1000000).toFixed(1)}M`;
+  } else if (votes >= 1000) {
+    return `${(votes / 1000).toFixed(1)}K`;
+  }
+  return votes.toString();
+};
+
 export function SiteCard({
   rankedSite,
   index,
@@ -35,19 +46,19 @@ export function SiteCard({
   const [hasVoted, setHasVoted] = useState(false);
   const [remainingVotes, setRemainingVotes] = useState(3);
   const isMobile = useIsMobile();
+
   useEffect(() => {
     if (user) {
-      // Carrega os votos do usuário
       VotingService.loadUserVotes(rankingId, user.id).then(votedSites => {
         setHasVoted(votedSites.includes(rankedSite.siteId));
       });
 
-      // Carrega os votos restantes
       VotingService.getRemainingVotes(rankingId, user.id).then(remaining => {
         setRemainingVotes(remaining);
       });
     }
   }, [user, rankingId, rankedSite.siteId]);
+
   const handleVote = async () => {
     if (!user) {
       toast({
@@ -94,6 +105,7 @@ export function SiteCard({
       setIsVoting(false);
     }
   };
+
   return <Card key={rankedSite.siteId} className={`overflow-hidden transition-all ${isTopThree ? 'border-primary dark:border-primary border-2 shadow-lg' : ''}`}>
       <CardContent className={`p-4 ${isTopThree ? 'bg-primary/10 dark:bg-primary/5' : ''}`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -141,7 +153,7 @@ export function SiteCard({
             <div>
               <div className="flex justify-between mb-1">
                 <span className="text-xs text-muted-foreground">Popularidade</span>
-                <span className="font-medium text-base text-left">{rankedSite.votes} votos</span>
+                <span className="font-medium text-base text-left">{formatVotes(rankedSite.votes)} votos</span>
               </div>
               <Progress value={rankedSite.votes / maxVotes * 100} className="h-2" />
             </div>
