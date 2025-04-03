@@ -7,6 +7,7 @@ import { RankingCategory } from "@/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { CategoryList } from "@/components/admin/categories/category-list";
 
 interface CategoryManagementProps {
   onDataChange: () => void;
@@ -65,42 +66,23 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Categorias Existentes ({!isLoading ? categories.length : '-'})</CardTitle>
-          <CardDescription>
-            Todas as categorias de ranking no banco de dados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+      <div className="space-y-6">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-          {isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">Nenhuma categoria encontrada</div>
-          ) : (
-            <ul className="space-y-3">
-              {categories.map((category) => (
-                <li key={category.id} className="border-b pb-3">
-                  <div className="font-medium">{category.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {category.description}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : (
+          <CategoryList categories={categories} onDataChange={handleCategoryAdded} />
+        )}
+      </div>
     </div>
   );
 }

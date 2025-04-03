@@ -19,7 +19,8 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ranking_categories')
-        .select('*');
+        .select('*')
+        .order('position', { ascending: true });
       
       if (error) throw error;
       return data as RankingCategory[];

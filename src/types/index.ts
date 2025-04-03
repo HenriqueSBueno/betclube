@@ -1,3 +1,4 @@
+
 export type UserRole = "admin" | "user";
 
 export interface User {
@@ -26,6 +27,7 @@ export interface RankingCategory {
   name: string;
   description: string;
   admin_owner_id: string; // Changed from adminOwnerId to match database column name
+  position?: number; // Added position for ordering categories
 }
 
 export interface DailyRanking {
