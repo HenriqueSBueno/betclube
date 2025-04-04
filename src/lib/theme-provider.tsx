@@ -23,7 +23,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "system", // Changed default to "system" here
   storageKey = "betting-buzz-ui-theme",
   ...props
 }: ThemeProviderProps) {
