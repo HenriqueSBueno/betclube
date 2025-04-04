@@ -1,269 +1,148 @@
+
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import { RankingCategory } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RankingTestProps {
   categories: RankingCategory[];
 }
 
 export function RankingTest({ categories }: RankingTestProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || "");
-  const [siteCount, setSiteCount] = useState<string>("10");
-  const [minVotes, setMinVotes] = useState<string>("0");
-  const [maxVotes, setMaxVotes] = useState<string>("100");
-  const [logs, setLogs] = useState<string[]>([]);
+  const [siteCount, setSiteCount] = useState<number>(10);
+  const [minVotes, setMinVotes] = useState<number>(0);
+  const [maxVotes, setMaxVotes] = useState<number>(100);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const addLog = (message: string) => {
-    setLogs(prev => [...prev, `${new Date().toISOString().substring(11, 23)}: ${message}`]);
-  };
-
-  const testDirectFunction = async () => {
+  // Handle form submission
+  const handleGenerateRanking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!selectedCategoryId) {
       toast.error("Please select a category");
       return;
     }
-
-    setIsLoading(true);
-    setResult(null);
-    addLog("Starting direct function test...");
-
+    
+    setIsGenerating(true);
+    
     try {
-      addLog(`Calling generate_daily_ranking with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
-      
-      // Call the database function directly
-      const { data, error } = await supabase.rpc('generate_daily_ranking', {
-        category_id: selectedCategoryId,
-        site_count: parseInt(siteCount, 10),
-        min_votes: parseInt(minVotes, 10),
-        max_votes: parseInt(maxVotes, 10)
-      });
-      
-      if (error) {
-        addLog(`Error from direct function call: ${error.message}`);
-        toast.error(`Function error: ${error.message}`);
-        setResult(JSON.stringify({ error }, null, 2));
-      } else {
-        addLog(`Direct function call successful. Result: ${data}`);
-        toast.success("Ranking generated successfully!");
-        setResult(JSON.stringify({ data }, null, 2));
+      // Step 1: Update or insert ranking configuration
+      const { error: configError } = await supabase
+        .from('ranking_configs')
+        .upsert(
+          {
+            category_id: selectedCategoryId,
+            site_count: siteCount,
+            min_votes: minVotes,
+            max_votes: maxVotes,
+            last_modified: new Date().toISOString()
+          },
+          { onConflict: 'category_id' }
+        );
         
-        // Try to fetch the generated ranking
-        const rankingId = data;
-        addLog(`Trying to fetch the generated ranking with ID: ${rankingId}`);
-        
-        const { data: rankingData, error: rankingError } = await supabase
-          .from('daily_rankings')
-          .select('*, ranked_sites(*)')
-          .eq('id', rankingId)
-          .single();
-          
-        if (rankingError) {
-          addLog(`Error fetching ranking: ${rankingError.message}`);
-        } else {
-          addLog(`Successfully fetched ranking with ${rankingData.ranked_sites.length} sites`);
-          setResult(JSON.stringify({ function_result: data, ranking: rankingData }, null, 2));
-        }
-      }
-    } catch (error) {
-      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
-      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
-      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const testApiEndpoint = async () => {
-    if (!selectedCategoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    setIsLoading(true);
-    setResult(null);
-    addLog("Starting API endpoint test...");
-
-    try {
-      addLog(`Calling generate-ranking API with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
+      if (configError) throw configError;
       
-      // Call the API endpoint
-      const response = await fetch('/api/generate-ranking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Step 2: Call the edge function to generate the ranking
+      const response = await supabase.functions.invoke('generate_daily_ranking', {
+        body: {
           category_id: selectedCategoryId,
-          site_count: parseInt(siteCount, 10),
-          min_votes: parseInt(minVotes, 10),
-          max_votes: parseInt(maxVotes, 10)
-        }),
-      });
-      
-      const responseText = await response.text();
-      addLog(`API raw response: ${responseText || 'Empty response'}`);
-      
-      if (!response.ok) {
-        addLog(`API error status ${response.status}: ${responseText || 'No error details'}`);
-        toast.error(`API error: ${response.status} ${response.statusText}`);
-        setResult(`Error ${response.status}: ${responseText || 'No response data'}`);
-        return;
-      }
-      
-      if (!responseText) {
-        addLog('API returned empty response');
-        setResult('Empty response from API');
-        return;
-      }
-      
-      try {
-        const responseData = JSON.parse(responseText);
-        addLog(`API call successful. Result: ${JSON.stringify(responseData)}`);
-        toast.success("API call successful!");
-        setResult(JSON.stringify(responseData, null, 2));
-      } catch (parseError) {
-        addLog(`Error parsing API response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
-        setResult(`Invalid JSON response: ${responseText}`);
-      }
-    } catch (error) {
-      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
-      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
-      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const testEdgeFunction = async () => {
-    if (!selectedCategoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    setIsLoading(true);
-    setResult(null);
-    addLog("Starting edge function test...");
-
-    try {
-      addLog(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
-      
-      // Call the Supabase edge function directly
-      const { data, error } = await supabase.functions.invoke('generate_daily_ranking', {
-        body: { 
-          category_id: selectedCategoryId,
-          site_count: parseInt(siteCount, 10),
-          min_votes: parseInt(minVotes, 10),
-          max_votes: parseInt(maxVotes, 10)
+          site_count: siteCount,
+          min_votes: minVotes,
+          max_votes: maxVotes
         }
       });
       
-      if (error) {
-        addLog(`Edge function error: ${error.message}`);
-        toast.error(`Edge function error: ${error.message}`);
-        setResult(JSON.stringify({ error }, null, 2));
-      } else {
-        addLog(`Edge function call successful. Result: ${JSON.stringify(data)}`);
-        toast.success("Edge function call successful!");
-        setResult(JSON.stringify(data, null, 2));
-      }
+      if (response.error) throw new Error(response.error.message);
+      
+      toast.success("Ranking generated successfully");
     } catch (error) {
-      addLog(`Exception during test: ${error instanceof Error ? error.message : String(error)}`);
-      toast.error(`Test error: ${error instanceof Error ? error.message : String(error)}`);
-      setResult(`Exception: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Error generating ranking:", error);
+      toast.error("Failed to generate ranking: " + (error.message || "Unknown error"));
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
+  // Get the selected category name
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+  
   return (
-    <Card className="mt-6">
+    <Card>
       <CardHeader>
-        <CardTitle>Gerar Rankings</CardTitle>
+        <CardTitle>Teste de Geração de Ranking</CardTitle>
+        <CardDescription>
+          Configurar e gerar ranking para uma categoria específica
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6">
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Category</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Site Count</label>
-                <Input
-                  type="number"
-                  value={siteCount}
-                  onChange={(e) => setSiteCount(e.target.value)}
-                  min="1"
-                  max="50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Min Votes</label>
-                <Input
-                  type="number"
-                  value={minVotes}
-                  onChange={(e) => setMinVotes(e.target.value)}
-                  min="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Max Votes</label>
-                <Input
-                  type="number"
-                  value={maxVotes}
-                  onChange={(e) => setMaxVotes(e.target.value)}
-                  min="1"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={testDirectFunction} disabled={isLoading}>
-              {isLoading ? "Testing..." : "Test Database Function"}
-            </Button>
-            <Button onClick={testApiEndpoint} variant="secondary" disabled={isLoading}>
-              {isLoading ? "Testing..." : "Test API Endpoint"}
-            </Button>
-            <Button onClick={testEdgeFunction} variant="outline" disabled={isLoading}>
-              {isLoading ? "Testing..." : "Gerar Ranking"}
-            </Button>
+        <form onSubmit={handleGenerateRanking} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria</Label>
+            <Select 
+              value={selectedCategoryId} 
+              onValueChange={setSelectedCategoryId}
+            >
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="mt-4 p-4 bg-muted rounded-md max-h-80 overflow-auto">
-            <h4 className="text-sm font-medium mb-2">Logs:</h4>
-            {logs.map((log, index) => (
-              <div key={index} className="text-xs mb-1 font-mono">{log}</div>
-            ))}
+          <div className="space-y-2">
+            <Label htmlFor="siteCount">Número de Sites</Label>
+            <Input
+              id="siteCount"
+              type="number"
+              value={siteCount}
+              onChange={(e) => setSiteCount(Number(e.target.value))}
+              min={1}
+              max={50}
+            />
           </div>
           
-          {result && (
-            <div className="mt-4 p-4 bg-muted rounded-md">
-              <h4 className="text-sm font-medium mb-2">Result:</h4>
-              <pre className="text-xs overflow-auto max-h-80 font-mono">{result}</pre>
-            </div>
-          )}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="minVotes">Votos Mínimos</Label>
+            <Input
+              id="minVotes"
+              type="number"
+              value={minVotes}
+              onChange={(e) => setMinVotes(Number(e.target.value))}
+              min={0}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="maxVotes">Votos Máximos</Label>
+            <Input
+              id="maxVotes"
+              type="number"
+              value={maxVotes}
+              onChange={(e) => setMaxVotes(Number(e.target.value))}
+              min={1}
+            />
+          </div>
+          
+          <Button 
+            type="submit" 
+            disabled={isGenerating || !selectedCategoryId}
+            className="w-full"
+          >
+            {isGenerating ? "Gerando..." : "Gerar Ranking"}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

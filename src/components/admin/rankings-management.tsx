@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GenerateRankingsForm } from "@/components/admin/generate-rankings-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { RankingsService } from "@/services/rankings-service";
@@ -16,7 +15,6 @@ interface RankingsManagementProps {
 }
 
 export function RankingsManagement({ categories, onDataChange }: RankingsManagementProps) {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || "");
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
   
   const { data: rankings = [], isLoading } = useQuery({
@@ -24,10 +22,6 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
     queryFn: async () => await RankingsService.getAllRankings(),
     enabled: categories.length > 0,
   });
-  
-  const handleGenerationSuccess = () => {
-    onDataChange();
-  };
   
   const handleGenerateAllRankings = async () => {
     if (isBatchGenerating) return;
@@ -46,13 +40,6 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
       setIsBatchGenerating(false);
     }
   };
-  
-  // Filter categories for the selected category
-  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
-  const categoryRanking = rankings.find(r => r.categoryId === selectedCategoryId);
-  
-  // Filter the categories for the currently selected one
-  const filteredCategories = selectedCategory ? [selectedCategory] : [];
   
   return (
     <div className="grid gap-6">
@@ -81,12 +68,7 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* The Select Category and Generate Sports Ranking sections are now hidden */}
-          
-          {/* Only show the renamed Ranking Test section */}
-          <RankingTest categories={categories} />
-        </>
+        <RankingTest categories={categories} />
       )}
     </div>
   );

@@ -233,10 +233,10 @@ export class RankingsService {
     }
   }
   
-  // Gerar todos os rankings diários
+  // Generate all daily rankings
   static async generateDailyBatch() {
     try {
-      // Chamar a edge function para gerar todos os rankings
+      // Call the edge function to generate all rankings
       const { data, error } = await supabase.functions.invoke('generate_daily_rankings');
       
       if (error) {
@@ -246,14 +246,14 @@ export class RankingsService {
       
       console.log("Successfully triggered daily rankings generation:", data);
       
-      // Aguardar um momento para os rankings serem gerados no banco
+      // Wait a moment for rankings to be generated in the database
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Retornar todos os rankings atualizados
+      // Return all updated rankings
       return this.getAllRankings();
     } catch (error) {
-      console.error("Erro ao gerar batch de rankings diários:", error);
-      toast.error("Erro ao gerar rankings. Tente novamente mais tarde.");
+      console.error("Error generating daily rankings batch:", error);
+      toast.error("Error generating rankings. Please try again later.");
       throw error;
     }
   }

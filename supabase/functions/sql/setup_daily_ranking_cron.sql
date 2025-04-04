@@ -1,15 +1,15 @@
 
--- Habilitar as extensões necessárias (se ainda não estiverem habilitadas)
+-- Enable required extensions (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Remover o job existente se houver
+-- Remove existing job if any
 SELECT cron.unschedule('daily-rankings-generation');
 
--- Criar um novo job para executar a função às 0h no horário de Brasília (3h UTC)
+-- Create a new job to run the function at midnight Brasília time (3am UTC)
 SELECT cron.schedule(
-  'daily-rankings-generation',   -- nome do job
-  '0 3 * * *',                  -- executar às 3h UTC (0h de Brasília) todos os dias
+  'daily-rankings-generation',   -- job name
+  '0 3 * * *',                  -- run at 3am UTC (midnight in Brasília) every day
   $$
   SELECT
     net.http_post(
@@ -20,5 +20,5 @@ SELECT cron.schedule(
   $$
 );
 
--- Verificar se o job foi criado corretamente
+-- Verify the job was created correctly
 SELECT * FROM cron.job WHERE jobname = 'daily-rankings-generation';
