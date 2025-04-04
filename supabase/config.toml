@@ -60,4 +60,3 @@ url = ""
 [functions]
 [functions.submit-site-suggestion]
 verify_jwt = false
-
