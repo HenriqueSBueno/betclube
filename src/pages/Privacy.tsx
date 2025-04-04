@@ -1,4 +1,3 @@
-
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
@@ -17,7 +16,7 @@ const Privacy = () => {
             </p>
 
             <p>
-              Esta Política de Privacidade descreve como suas informações pessoais são coletadas, usadas e compartilhadas quando você visita ou faz uma compra no Betclub ("Site").
+              Esta Política de Privacidade descreve como suas informações pessoais são coletadas, usadas e compartilhadas quando você visita ou faz uma compra no Betclube ("Site").
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4">1. Informações que coletamos</h2>
@@ -76,7 +75,7 @@ const Privacy = () => {
             <ul className="list-disc pl-6 space-y-2">
               <li>Com provedores de serviços que nos ajudam a operar nosso Site (como serviços de hospedagem ou análise)</li>
               <li>Para cumprir com obrigações legais, como para responder a intimações ou ordens judiciais</li>
-              <li>Para proteger os direitos, propriedade ou segurança do Betclub, nossos usuários ou terceiros</li>
+              <li>Para proteger os direitos, propriedade ou segurança do Betclube, nossos usuários ou terceiros</li>
               <li>Com seu consentimento ou conforme divulgado no momento da coleta</li>
             </ul>
 

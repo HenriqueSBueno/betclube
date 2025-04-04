@@ -57,7 +57,7 @@ export function Header() {
                 <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
               </svg>
             </div>
-            <span className="font-bold text-xl">Betclub</span>
+            <span className="font-bold text-xl">Betclube</span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-4">

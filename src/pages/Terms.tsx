@@ -1,4 +1,3 @@
-
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
@@ -18,7 +17,7 @@ const Terms = () => {
 
             <h2 className="text-2xl font-bold mt-8 mb-4">1. Aceitação dos Termos</h2>
             <p>
-              Ao acessar e usar o site Betclub ("Site"), você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não poderá acessar ou usar nosso Site.
+              Ao acessar e usar o site Betclube ("Site"), você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não poderá acessar ou usar nosso Site.
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4">2. Alterações nos Termos</h2>
