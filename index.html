@@ -26,8 +26,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.gpteng.co" crossorigin>
     
-    <!-- Set cache headers for static assets -->
-    <link rel="stylesheet" href="/src/index.css" media="print" onload="this.media='all'">
+    <!-- Preload critical CSS -->
+    <link rel="preload" href="/src/index.css" as="style">
+    <link rel="stylesheet" href="/src/index.css">
+    
+    <!-- Cache control headers -->
+    <meta http-equiv="Cache-Control" content="max-age=31536000, immutable" />
   </head>
 
   <body>

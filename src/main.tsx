@@ -21,14 +21,18 @@ preconnectLinks.forEach(link => {
   document.head.appendChild(linkElement);
 });
 
+// Create root immediately to avoid layout shifts
+const rootElement = document.getElementById("root");
+const root = createRoot(rootElement!);
+
 // Use requestIdleCallback to defer non-critical work
 if ('requestIdleCallback' in window) {
   window.requestIdleCallback(() => {
-    createRoot(document.getElementById("root")!).render(<App />);
+    root.render(<App />);
   });
 } else {
   // Fallback for browsers that don't support requestIdleCallback
   setTimeout(() => {
-    createRoot(document.getElementById("root")!).render(<App />);
+    root.render(<App />);
   }, 0);
 }
