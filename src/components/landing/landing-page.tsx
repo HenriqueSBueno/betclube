@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,11 +10,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [showRegisterForm, setShowRegisterForm] = useState(true);
+  const [authModalView, setAuthModalView] = useState<"login" | "register">("register");
   const isMobile = useIsMobile();
   
   const handleStartNowClick = () => {
-    setShowRegisterForm(true);
+    setAuthModalView("register");
     setIsAuthModalOpen(true);
   };
   
@@ -104,13 +105,13 @@ export function LandingPage() {
             <p className="max-w-[700px] text-lg text-muted-foreground mb-8">
               O Betclub é e sempre será 100% gratuito para todos os usuários. Sem taxas, sem assinaturas, sem limitações.
             </p>
-            <Button size="lg" onClick={() => setIsAuthModalOpen(true)} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md">
+            <Button size="lg" onClick={handleStartNowClick} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md">
               Crie Sua Conta Grátis Agora
             </Button>
           </div>
         </div>
       </section>
       
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView="register" />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView={authModalView} />
     </div>;
 }

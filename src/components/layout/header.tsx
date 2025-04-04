@@ -17,12 +17,18 @@ import { LogIn, LogOut, User, LayoutDashboard, Settings } from "lucide-react";
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalView, setAuthModalView] = useState<"login" | "register">("login");
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
 
   const getUserInitials = () => {
     if (user?.username) return user.username.charAt(0).toUpperCase();
     if (!user?.email) return "U";
     return user.email.charAt(0).toUpperCase();
+  };
+
+  const handleLoginClick = () => {
+    setAuthModalView("login");
+    setIsAuthModalOpen(true);
   };
 
   return (
@@ -116,7 +122,7 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <Button 
-              onClick={() => setIsAuthModalOpen(true)}
+              onClick={handleLoginClick}
               className="gap-1"
             >
               <LogIn className="h-4 w-4" />
@@ -129,6 +135,7 @@ export function Header() {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
+        initialView={authModalView}
       />
     </header>
   );
