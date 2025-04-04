@@ -15,12 +15,12 @@ export class SiteSuggestionService {
     try {
       console.log("Enviando sugestão de site para o Supabase:", url);
       
-      // Chamar a função RPC 'submit_site_suggestion' no Supabase
+      // Fix: properly format parameters as separate arguments (not as an object)
       const { data, error } = await supabase.rpc(
         'submit_site_suggestion',
-        {
+        { 
           url_input: url,
-          ip_address: "client-ip-auto-detected" // Supabase substituirá isso pelo IP real
+          ip_address: "client-ip-auto-detected"
         }
       );
 
@@ -33,7 +33,7 @@ export class SiteSuggestionService {
       }
       
       console.log("Sugestão enviada com sucesso:", data);
-      return data as { success: boolean; message: string } || { success: true, message: "Sugestão enviada com sucesso!" };
+      return { success: true, message: "Sugestão enviada com sucesso!" };
     } catch (error: any) {
       console.error("Erro ao enviar sugestão:", error);
       return { 

@@ -11,10 +11,17 @@ export function SiteSuggestionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const validateUrl = (url: string): boolean => {
+    // Basic URL validation using regex
+    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/;
+    return urlPattern.test(url);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!url.trim()) {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) {
       toast({
         title: "URL é obrigatória",
         description: "Por favor, informe a URL do site que deseja sugerir.",
@@ -23,11 +30,27 @@ export function SiteSuggestionForm() {
       return;
     }
 
+    // Add URL validation
+    if (!validateUrl(trimmedUrl)) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida (ex: https://exemplo.com).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Ensure URL has http/https protocol
+    let formattedUrl = trimmedUrl;
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
     setIsSubmitting(true);
     
     try {
-      console.log("Enviando sugestão de site:", url);
-      const result = await SiteSuggestionService.submitSuggestion(url);
+      console.log("Enviando sugestão de site:", formattedUrl);
+      const result = await SiteSuggestionService.submitSuggestion(formattedUrl);
       
       console.log("Resposta do serviço:", result);
       
