@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -79,116 +78,113 @@ export function RegisterForm({ onToggleForm, onRegisterSuccess }: RegisterFormPr
   }
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle className="text-2xl">Registrar</CardTitle>
-        <CardDescription>
+    <div className="w-full max-w-md p-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold">Registrar</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Crie uma conta para começar a votar
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Erro</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome de Usuário</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Seu nome de usuário"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="seu@email.com"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Senha</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Senha</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           
-          <CardFooter className="flex flex-col space-y-2">
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
-              {isLoading ? "Registrando..." : "Registrar"}
-            </Button>
-            <div className="text-sm text-center mt-2">
-              Já tem uma conta?{" "}
-              <Button variant="link" onClick={onToggleForm} className="p-0">
-                Entrar
-              </Button>
-            </div>
-          </CardFooter>
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome de Usuário</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Seu nome de usuário"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="seu@email.com"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirmar Senha</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Button 
+            type="submit" 
+            className="w-full mt-2" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Registrando..." : "Registrar"}
+          </Button>
         </form>
       </Form>
-    </Card>
+
+      <div className="text-sm text-center mt-6">
+        Já tem uma conta?{" "}
+        <Button variant="link" onClick={onToggleForm} className="p-0">
+          Entrar
+        </Button>
+      </div>
+    </div>
   );
 }

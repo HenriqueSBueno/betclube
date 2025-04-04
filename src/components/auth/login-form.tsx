@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -53,62 +52,63 @@ export function LoginForm({ onToggleForm, onLoginSuccess }: LoginFormProps) {
   }
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>
+    <div className="w-full max-w-md p-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold">Login</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Entre com suas credenciais para acessar sua conta
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erro</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button 
-            type="submit" 
-            className="w-full" 
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             disabled={isLoading}
-          >
-            {isLoading ? "Entrando..." : "Entrar"}
-          </Button>
-          <div className="text-sm text-center mt-2">
-            Não tem uma conta?{" "}
-            <Button variant="link" onClick={onToggleForm} className="p-0">
-              Registre-se
-            </Button>
-          </div>
-        </CardFooter>
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Senha</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+        </div>
+        
+        <Button 
+          type="submit" 
+          className="w-full mt-2" 
+          disabled={isLoading}
+        >
+          {isLoading ? "Entrando..." : "Entrar"}
+        </Button>
       </form>
-    </Card>
+
+      <div className="text-sm text-center mt-6">
+        Não tem uma conta?{" "}
+        <Button variant="link" onClick={onToggleForm} className="p-0">
+          Registre-se
+        </Button>
+      </div>
+    </div>
   );
 }
