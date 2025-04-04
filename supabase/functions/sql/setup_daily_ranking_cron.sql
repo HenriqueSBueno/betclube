@@ -6,10 +6,10 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 -- Remover o job existente se houver
 SELECT cron.unschedule('daily-rankings-generation');
 
--- Criar um novo job para executar a função à meia-noite (hora UTC)
+-- Criar um novo job para executar a função às 0h no horário de Brasília (3h UTC)
 SELECT cron.schedule(
   'daily-rankings-generation',   -- nome do job
-  '0 0 * * *',                  -- executar à meia-noite todos os dias
+  '0 3 * * *',                  -- executar às 3h UTC (0h de Brasília) todos os dias
   $$
   SELECT
     net.http_post(

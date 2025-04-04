@@ -14,12 +14,13 @@ serve(async (req) => {
   }
 
   try {
+    const now = new Date();
+    console.log(`Função de geração diária de rankings iniciada em ${now.toISOString()} (${now.toString()})`);
+    
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    console.log(`Generating daily rankings at ${new Date().toISOString()}`);
     
     // Get all ranking configurations
     const { data: configs, error: configsError } = await supabase
@@ -27,83 +28,101 @@ serve(async (req) => {
       .select('*');
       
     if (configsError) {
-      throw new Error(`Error fetching configurations: ${configsError.message}`);
+      throw new Error(`Erro ao buscar configurações: ${configsError.message}`);
     }
     
-    console.log(`Found ${configs.length} ranking configurations to process`);
+    console.log(`Encontradas ${configs?.length || 0} configurações de ranking para processar`);
+    
+    if (!configs || configs.length === 0) {
+      console.log('Nenhuma configuração de ranking encontrada. Tentando buscar todas as categorias.');
+      
+      // Se não houver configs, buscar todas as categorias e criar configs padrão
+      const { data: categories, error: categoriesError } = await supabase
+        .from('ranking_categories')
+        .select('id, name');
+        
+      if (categoriesError) {
+        throw new Error(`Erro ao buscar categorias: ${categoriesError.message}`);
+      }
+      
+      console.log(`Encontradas ${categories?.length || 0} categorias para criar configs padrão`);
+      
+      // Criar configs padrão para cada categoria
+      if (categories && categories.length > 0) {
+        const defaultConfigs = categories.map(category => ({
+          category_id: category.id,
+          site_count: 10,
+          min_votes: 0,
+          max_votes: 100,
+          last_modified: new Date().toISOString()
+        }));
+        
+        const { error: insertError } = await supabase
+          .from('ranking_configs')
+          .upsert(defaultConfigs, { onConflict: 'category_id' });
+          
+        if (insertError) {
+          throw new Error(`Erro ao criar configs padrão: ${insertError.message}`);
+        }
+        
+        // Buscar as configs novamente
+        const { data: newConfigs, error: newConfigsError } = await supabase
+          .from('ranking_configs')
+          .select('*');
+          
+        if (newConfigsError) {
+          throw new Error(`Erro ao buscar novas configurações: ${newConfigsError.message}`);
+        }
+        
+        configs = newConfigs || [];
+      }
+    }
     
     const results = [];
     
     // Process each configuration
     for (const config of configs) {
-      console.log(`Processing category ${config.category_id} with ${config.site_count} sites, min votes: ${config.min_votes}, max votes: ${config.max_votes}`);
+      console.log(`Processando categoria ${config.category_id} com ${config.site_count} sites, min votos: ${config.min_votes}, max votos: ${config.max_votes}`);
       
-      // Step 1: Get existing rankings for this category
-      const { data: existingRankings, error: rankingsError } = await supabase
-        .from('daily_rankings')
-        .select('id')
-        .eq('category_id', config.category_id);
-        
-      if (rankingsError) {
-        console.error(`Error fetching existing rankings for category ${config.category_id}: ${rankingsError.message}`);
-        continue;
-      }
-      
-      // Step 2: Delete existing ranked sites
-      if (existingRankings && existingRankings.length > 0) {
-        for (const ranking of existingRankings) {
-          const { error: deleteRankedSitesError } = await supabase
-            .from('ranked_sites')
-            .delete()
-            .eq('ranking_id', ranking.id);
-            
-          if (deleteRankedSitesError) {
-            console.error(`Error deleting ranked sites for ranking ${ranking.id}: ${deleteRankedSitesError.message}`);
-            continue;
+      try {
+        // Call the function to generate the ranking
+        const { data: rankingId, error: generateError } = await supabase.rpc(
+          'generate_daily_ranking',
+          {
+            category_id: config.category_id,
+            site_count: config.site_count,
+            min_votes: config.min_votes,
+            max_votes: config.max_votes
           }
-        }
+        );
         
-        // Step 3: Delete existing rankings
-        const { error: deleteRankingsError } = await supabase
-          .from('daily_rankings')
-          .delete()
-          .eq('category_id', config.category_id);
-          
-        if (deleteRankingsError) {
-          console.error(`Error deleting rankings for category ${config.category_id}: ${deleteRankingsError.message}`);
+        if (generateError) {
+          console.error(`Erro ao gerar ranking para categoria ${config.category_id}: ${generateError.message}`);
           continue;
         }
+        
+        console.log(`Ranking gerado com sucesso: ${rankingId} para categoria ${config.category_id}`);
+        results.push({ category_id: config.category_id, ranking_id: rankingId });
+      } catch (categoryError) {
+        console.error(`Exceção ao processar categoria ${config.category_id}: ${categoryError.message}`);
       }
-      
-      // Step 4: Generate new ranking
-      const { data: rankingId, error: generateError } = await supabase.rpc(
-        'generate_daily_ranking',
-        {
-          category_id: config.category_id,
-          site_count: config.site_count,
-          min_votes: config.min_votes,
-          max_votes: config.max_votes
-        }
-      );
-      
-      if (generateError) {
-        console.error(`Error generating ranking for category ${config.category_id}: ${generateError.message}`);
-        continue;
-      }
-      
-      console.log(`Successfully generated ranking ${rankingId} for category ${config.category_id}`);
-      results.push({ category_id: config.category_id, ranking_id: rankingId });
     }
     
-    console.log(`Daily ranking generation complete. Generated ${results.length} rankings`);
+    console.log(`Geração de rankings diários concluída. Gerados ${results.length} rankings`);
 
     // Return the data
-    return new Response(JSON.stringify({ results, message: 'Daily rankings generated successfully' }), {
+    return new Response(JSON.stringify({ 
+      results, 
+      message: 'Rankings diários gerados com sucesso',
+      timestamp: now.toISOString(),
+      categories_processed: configs?.length || 0,
+      rankings_generated: results.length
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
-    console.error(`Error in generate_daily_rankings edge function: ${error.message}`);
+    console.error(`Erro na função de borda generate_daily_rankings: ${error.message}`);
     
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

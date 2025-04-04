@@ -14,6 +14,9 @@ serve(async (req) => {
   }
 
   try {
+    const now = new Date();
+    console.log(`Função generate_daily_ranking iniciada em ${now.toISOString()}`);
+    
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -22,10 +25,10 @@ serve(async (req) => {
     // Get request payload
     const { category_id, site_count = 10, min_votes = 0, max_votes = 100 } = await req.json();
     
-    console.log(`Edge function called with category_id=${category_id}, site_count=${site_count}, min_votes=${min_votes}, max_votes=${max_votes}`);
+    console.log(`Edge function chamada com category_id=${category_id}, site_count=${site_count}, min_votes=${min_votes}, max_votes=${max_votes}`);
 
     if (!category_id) {
-      throw new Error('Category ID is required');
+      throw new Error('Category ID é obrigatório');
     }
 
     // Call the PostgreSQL function to generate the daily ranking
@@ -38,15 +41,19 @@ serve(async (req) => {
 
     if (error) throw error;
 
-    console.log(`Successfully generated ranking with ID: ${data}`);
+    console.log(`Ranking gerado com sucesso com ID: ${data}`);
 
     // Return the data
-    return new Response(JSON.stringify({ ranking_id: data }), {
+    return new Response(JSON.stringify({ 
+      ranking_id: data,
+      timestamp: now.toISOString(),
+      message: 'Ranking gerado com sucesso' 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
-    console.error(`Error in generate_daily_ranking edge function: ${error.message}`);
+    console.error(`Erro na função generate_daily_ranking: ${error.message}`);
     
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
