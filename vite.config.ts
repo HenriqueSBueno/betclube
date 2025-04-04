@@ -37,15 +37,12 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Enable more aggressive minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        // Aggressive dead code elimination
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
-      },
-    },
+    // Use esbuild for minification instead of terser
+    minify: 'esbuild',
+    cssMinify: 'lightningcss',
+    // Enable more aggressive optimizations
+    target: 'es2015',
+    assetsInlineLimit: 4096, // Inline assets smaller than 4kb
+    chunkSizeWarningLimit: 1000, // Warn on chunks above 1MB
   },
 }));

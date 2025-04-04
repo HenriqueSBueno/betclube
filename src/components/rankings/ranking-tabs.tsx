@@ -58,7 +58,7 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
           key={category.id} 
           value={category.id} 
           className="min-h-[40vh]"
-          forceMount={category.id === activeTab}
+          forceMount={activeTab === category.id}
         >
           {category.id === activeTab && (
             <RankingList 
