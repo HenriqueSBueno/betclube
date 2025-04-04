@@ -53,22 +53,26 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
       </ScrollArea>
       
       {/* Only render the active tab content to reduce initial JS load */}
-      {sortedCategories.map((category) => (
-        <TabsContent 
-          key={category.id} 
-          value={category.id} 
-          className="min-h-[40vh]"
-          forceMount={activeTab === category.id}
-        >
-          {category.id === activeTab && (
-            <RankingList 
-              categoryId={category.id}
-              onVote={onVote}
-              isInteractive={isInteractive}
-            />
-          )}
-        </TabsContent>
-      ))}
+      {sortedCategories.map((category) => {
+        // Only add forceMount when it's the active tab
+        const isActive = category.id === activeTab;
+        return (
+          <TabsContent 
+            key={category.id} 
+            value={category.id} 
+            className="min-h-[40vh]"
+            {...(isActive ? { forceMount: true } : {})}
+          >
+            {isActive && (
+              <RankingList 
+                categoryId={category.id}
+                onVote={onVote}
+                isInteractive={isInteractive}
+              />
+            )}
+          </TabsContent>
+        );
+      })}
     </Tabs>
   );
 }
