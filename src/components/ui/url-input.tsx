@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface URLInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface URLInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
   value: string;
   onChange: (value: string) => void;
   showError?: boolean;
