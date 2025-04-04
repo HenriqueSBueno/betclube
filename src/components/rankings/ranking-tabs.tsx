@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RankingCategory, DailyRanking } from "@/types";
 import { RankingList } from "./ranking-list";
@@ -12,13 +13,15 @@ interface RankingTabsProps {
 }
 
 export function RankingTabs({ categories, rankings, onVote, isInteractive = true }: RankingTabsProps) {
-  // Sort categories by position if available, or keep existing order
-  const sortedCategories = [...categories].sort((a, b) => {
-    if (a.position !== undefined && b.position !== undefined) {
-      return a.position - b.position;
-    }
-    return 0;
-  });
+  // Memoize sorted categories to prevent unnecessary calculations
+  const sortedCategories = useMemo(() => {
+    return [...categories].sort((a, b) => {
+      if (a.position !== undefined && b.position !== undefined) {
+        return a.position - b.position;
+      }
+      return 0;
+    });
+  }, [categories]);
   
   const [activeTab, setActiveTab] = useState(sortedCategories[0]?.id || "");
   
@@ -49,13 +52,21 @@ export function RankingTabs({ categories, rankings, onVote, isInteractive = true
         </TabsList>
       </ScrollArea>
       
+      {/* Only render the active tab content to reduce initial JS load */}
       {sortedCategories.map((category) => (
-        <TabsContent key={category.id} value={category.id} className="min-h-[40vh]">
-          <RankingList 
-            categoryId={category.id}
-            onVote={onVote}
-            isInteractive={isInteractive}
-          />
+        <TabsContent 
+          key={category.id} 
+          value={category.id} 
+          className="min-h-[40vh]"
+          forceMount={category.id === activeTab}
+        >
+          {category.id === activeTab && (
+            <RankingList 
+              categoryId={category.id}
+              onVote={onVote}
+              isInteractive={isInteractive}
+            />
+          )}
         </TabsContent>
       ))}
     </Tabs>

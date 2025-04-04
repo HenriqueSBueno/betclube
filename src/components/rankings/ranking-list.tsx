@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { SiteCard } from "./site-card";
 import { RankedSite, DailyRanking } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,15 +29,14 @@ export function RankingList({
   const [suggestionUrl, setSuggestionUrl] = useState('');
   const { toast } = useToast();
 
-  const fetchLatestData = async () => {
+  // Optimized fetch function using useCallback to prevent unnecessary re-renders
+  const fetchLatestData = useCallback(async () => {
     if (!categoryId) {
-      console.log("[RankingList] Sem categoryId, não é possível buscar dados");
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("[RankingList] Buscando dados mais recentes para categoria:", categoryId);
 
       const { data: ranking, error: rankingError } = await supabase
         .from("daily_rankings")
@@ -47,12 +47,10 @@ export function RankingList({
         .single();
 
       if (rankingError) {
-        console.error("[RankingList] Erro ao buscar ranking:", rankingError);
         throw rankingError;
       }
 
       if (!ranking) {
-        console.log("[RankingList] Nenhum ranking encontrado");
         setSites([]);
         setCurrentRankingId(null);
         return;
@@ -83,7 +81,6 @@ export function RankingList({
         .order("votes", { ascending: false });
 
       if (sitesError) {
-        console.error("[RankingList] Erro ao buscar sites:", sitesError);
         throw sitesError;
       }
 
@@ -103,11 +100,9 @@ export function RankingList({
         position: rs.position
       }));
 
-      console.log("[RankingList] Dados atualizados:", formattedSites);
       setSites(formattedSites);
 
     } catch (error: any) {
-      console.error("[RankingList] Erro ao buscar dados:", error);
       toast({
         variant: "destructive",
         title: "Erro ao carregar ranking",
@@ -116,12 +111,13 @@ export function RankingList({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [categoryId, toast]);
 
   useEffect(() => {
     if (categoryId) {
       fetchLatestData();
 
+      // Set up real-time subscription
       const channel = supabase
         .channel(`ranked_sites:category=${categoryId}`)
         .on(
@@ -132,8 +128,7 @@ export function RankingList({
             table: 'ranked_sites',
             filter: `ranking_id=eq.${currentRankingId}`
           },
-          (payload) => {
-            console.log("[RankingList] Recebida atualização em tempo real:", payload);
+          () => {
             fetchLatestData();
           }
         )
@@ -143,9 +138,9 @@ export function RankingList({
         supabase.removeChannel(channel);
       };
     }
-  }, [categoryId]);
+  }, [categoryId, currentRankingId, fetchLatestData]);
 
-  const handleVoteUpdate = (siteId: string, newVotes: number) => {
+  const handleVoteUpdate = useCallback((siteId: string, newVotes: number) => {
     setSites(prevSites => {
       const updatedSites = prevSites.map(site => 
         site.siteId === siteId 
@@ -155,7 +150,7 @@ export function RankingList({
       
       return [...updatedSites].sort((a, b) => b.votes - a.votes);
     });
-  };
+  }, []);
 
   const handleSubmitSuggestion = (e: React.FormEvent) => {
     e.preventDefault();
