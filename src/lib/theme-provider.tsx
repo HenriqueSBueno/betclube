@@ -61,6 +61,26 @@ export function ThemeProvider({
     root.classList.add(theme);
   }, [theme]);
 
+  // Adicionar um segundo efeito para lidar com a detecção inicial de tema
+  useEffect(() => {
+    // Esta função auxiliar aplica o tema correto com base nas preferências do sistema
+    const applySystemTheme = () => {
+      if (theme === "system") {
+        const root = window.document.documentElement;
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.classList.remove("light", "dark");
+        root.classList.add(isDark ? "dark" : "light");
+      }
+    };
+
+    // Aplicar tema no carregamento inicial
+    applySystemTheme();
+
+    // Reconfigurar ao focar na janela (útil quando alternando entre guias)
+    window.addEventListener("focus", applySystemTheme);
+    return () => window.removeEventListener("focus", applySystemTheme);
+  }, [theme]);
+
   const value = {
     theme,
     setTheme: (theme: Theme) => {
