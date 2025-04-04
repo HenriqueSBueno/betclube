@@ -30,11 +30,24 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
     setIsBatchGenerating(true);
     
     try {
-      // Usar a função do banco de dados diretamente
-      const { data, error } = await supabase.rpc('generate_daily_rankings');
+      // Process each category individually using the singular function
+      const results = [];
       
-      if (error) {
-        throw error;
+      for (const category of categories) {
+        try {
+          const { data, error } = await supabase.rpc('generate_daily_ranking', {
+            category_id: category.id
+          });
+          
+          if (error) {
+            console.error(`Error generating ranking for category ${category.name}:`, error);
+            continue;
+          }
+          
+          results.push(data);
+        } catch (categoryError) {
+          console.error(`Exception for category ${category.name}:`, categoryError);
+        }
       }
       
       toast.success("Todos os rankings foram gerados com sucesso");
