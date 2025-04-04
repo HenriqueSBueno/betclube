@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Trophy, Users, Star, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SiteSuggestionForm } from "../landing/site-suggestion-form";
 
 export function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -97,17 +98,29 @@ export function LandingPage() {
       
       <section className="w-full py-12 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center text-center">
-            <div className="inline-block px-4 py-1.5 mb-4 text-sm font-medium rounded-full bg-primary/20 text-primary">
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="inline-block px-4 py-1.5 mb-2 text-sm font-medium rounded-full bg-primary/20 text-primary">
               Sem custos escondidos
             </div>
-            <h2 className="text-3xl font-bold tracking-tight mb-4">Completamente Gratuito</h2>
-            <p className="max-w-[700px] text-lg text-muted-foreground mb-8">
+            <h2 className="text-3xl font-bold tracking-tight">Completamente Gratuito</h2>
+            <p className="max-w-[700px] text-lg text-muted-foreground">
               O Betclub é e sempre será 100% gratuito para todos os usuários. Sem taxas, sem assinaturas, sem limitações.
             </p>
-            <Button size="lg" onClick={handleStartNowClick} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md">
+            <Button size="lg" onClick={handleStartNowClick} className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md mt-2">
               Crie Sua Conta Grátis Agora
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full py-12 bg-background">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center space-y-4 text-center">
+            <h2 className="text-2xl font-bold tracking-tight">Sugerir um Site</h2>
+            <p className="max-w-[700px] text-muted-foreground">
+              Conhece um site de apostas que deveria estar na lista? Envie a URL abaixo e nosso time irá analisar.
+            </p>
+            <SiteSuggestionForm />
           </div>
         </div>
       </section>

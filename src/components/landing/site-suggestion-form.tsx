@@ -26,13 +26,15 @@ export function SiteSuggestionForm() {
     setIsSubmitting(true);
     
     try {
+      console.log("Enviando sugestão de site:", url);
       const result = await SiteSuggestionService.submitSuggestion(url);
+      
+      console.log("Resposta do serviço:", result);
       
       if (result.success) {
         toast({
           title: "Sugestão enviada!",
           description: "Obrigado pela sua sugestão. Nossa equipe irá analisá-la em breve.",
-          variant: "default",
         });
         setUrl("");
       } else {
@@ -43,7 +45,7 @@ export function SiteSuggestionForm() {
         });
       }
     } catch (error) {
-      console.error("Error submitting suggestion:", error);
+      console.error("Erro ao enviar sugestão:", error);
       toast({
         title: "Erro ao enviar sugestão",
         description: "Ocorreu um erro ao enviar a sugestão. Tente novamente mais tarde.",
@@ -55,7 +57,7 @@ export function SiteSuggestionForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto mt-6">
+    <div className="w-full max-w-md mx-auto mt-4">
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-grow">
           <Input

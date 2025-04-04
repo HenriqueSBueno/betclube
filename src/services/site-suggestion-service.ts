@@ -13,26 +13,29 @@ export interface SiteSuggestion {
 export class SiteSuggestionService {
   static async submitSuggestion(url: string): Promise<{ success: boolean; message: string }> {
     try {
-      console.log("Submitting site suggestion:", url);
+      console.log("Enviando sugestão de site para o Supabase:", url);
       
-      // Get client IP address from request headers (will be populated by Supabase)
+      // Chamar a função RPC 'submit_site_suggestion' no Supabase
       const { data, error } = await supabase.rpc(
-        'submit_site_suggestion' as any, 
+        'submit_site_suggestion',
         {
           url_input: url,
-          ip_address: "client-ip-auto-detected" // Supabase will replace this with actual IP
+          ip_address: "client-ip-auto-detected" // Supabase substituirá isso pelo IP real
         }
       );
 
       if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        console.error("Erro do Supabase:", error);
+        return { 
+          success: false, 
+          message: error.message || "Ocorreu um erro ao enviar a sugestão."
+        };
       }
       
-      console.log("Suggestion submitted successfully:", data);
+      console.log("Sugestão enviada com sucesso:", data);
       return data as { success: boolean; message: string } || { success: true, message: "Sugestão enviada com sucesso!" };
     } catch (error: any) {
-      console.error("Error submitting suggestion:", error);
+      console.error("Erro ao enviar sugestão:", error);
       return { 
         success: false, 
         message: error.message || "Ocorreu um erro ao enviar a sugestão."
@@ -42,22 +45,22 @@ export class SiteSuggestionService {
 
   static async getAllSuggestions(): Promise<SiteSuggestion[]> {
     try {
-      console.log("Fetching all suggestions");
+      console.log("Buscando todas as sugestões");
       
       const { data, error } = await supabase
-        .from('site_suggestions' as any)
+        .from('site_suggestions')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Supabase error:", error);
+        console.error("Erro do Supabase:", error);
         throw error;
       }
       
-      console.log("Suggestions fetched:", data);
-      return (data as unknown as SiteSuggestion[]) || [];
+      console.log("Sugestões encontradas:", data);
+      return (data as SiteSuggestion[]) || [];
     } catch (error) {
-      console.error("Error fetching suggestions:", error);
+      console.error("Erro ao buscar sugestões:", error);
       return [];
     }
   }
@@ -65,14 +68,14 @@ export class SiteSuggestionService {
   static async updateSuggestion(id: string, url: string, status: 'pending' | 'approved' | 'rejected'): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('site_suggestions' as any)
+        .from('site_suggestions')
         .update({ url, status })
         .eq('id', id);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error("Error updating suggestion:", error);
+      console.error("Erro ao atualizar sugestão:", error);
       return false;
     }
   }
@@ -80,20 +83,20 @@ export class SiteSuggestionService {
   static async deleteSuggestion(id: string): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('site_suggestions' as any)
+        .from('site_suggestions')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error("Error deleting suggestion:", error);
+      console.error("Erro ao excluir sugestão:", error);
       return false;
     }
   }
 
   static exportToCsv(suggestions: SiteSuggestion[]): void {
-    // Create CSV content
+    // Criar conteúdo CSV
     let csvContent = "ID,URL,Status,Criado em\n";
     
     suggestions.forEach(suggestion => {
@@ -101,7 +104,7 @@ export class SiteSuggestionService {
       csvContent += `${suggestion.id},${suggestion.url},${suggestion.status},${createdAt}\n`;
     });
     
-    // Create download link
+    // Criar link de download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
