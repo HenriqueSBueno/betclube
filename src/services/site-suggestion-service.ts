@@ -27,7 +27,14 @@ export class SiteSuggestionService {
         };
       }
       
-      console.log("Sugestão enviada com sucesso:", data);
+      console.log("Resposta da função Edge:", data);
+      
+      if (!data || !data.success) {
+        const errorMsg = data?.message || "Erro desconhecido do servidor";
+        console.error("Erro do servidor:", errorMsg);
+        return { success: false, message: errorMsg };
+      }
+      
       return { success: true, message: "Sugestão enviada com sucesso!" };
     } catch (error: any) {
       console.error("Erro ao enviar sugestão:", error);
