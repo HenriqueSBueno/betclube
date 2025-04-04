@@ -3,8 +3,17 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Remove existing job if any
-SELECT cron.unschedule('daily-rankings-generation');
+-- Remove existing job if any (using a different approach that won't error if job doesn't exist)
+DO $$
+BEGIN
+  -- Try to unschedule the job if it exists
+  BEGIN
+    PERFORM cron.unschedule('daily-rankings-generation');
+  EXCEPTION WHEN OTHERS THEN
+    -- Job doesn't exist or another error occurred, just continue
+    RAISE NOTICE 'Job may not exist yet, creating it now';
+  END;
+END $$;
 
 -- Create a new job to run the function at midnight Brasília time (3am UTC)
 SELECT cron.schedule(
@@ -22,3 +31,9 @@ SELECT cron.schedule(
 
 -- Verify the job was created correctly
 SELECT * FROM cron.job WHERE jobname = 'daily-rankings-generation';
+
+-- Add logging message to help with debugging
+DO $$
+BEGIN
+  RAISE NOTICE 'Cron job daily-rankings-generation has been scheduled to run at 3am UTC (midnight Brasília).';
+END $$;
