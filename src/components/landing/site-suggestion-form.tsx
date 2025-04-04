@@ -1,27 +1,19 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { SiteSuggestionService } from "@/services/site-suggestion-service";
-import { LinkIcon } from "lucide-react";
+import { URLInput } from "@/components/ui/url-input";
 
 export function SiteSuggestionForm() {
   const [url, setUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const validateUrl = (url: string): boolean => {
-    // Basic URL validation using regex
-    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/;
-    return urlPattern.test(url);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) {
+    if (!url) {
       toast({
         title: "URL é obrigatória",
         description: "Por favor, informe a URL do site que deseja sugerir.",
@@ -30,27 +22,11 @@ export function SiteSuggestionForm() {
       return;
     }
 
-    // Add URL validation
-    if (!validateUrl(trimmedUrl)) {
-      toast({
-        title: "URL inválida",
-        description: "Por favor, insira uma URL válida (ex: https://exemplo.com).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Ensure URL has http/https protocol
-    let formattedUrl = trimmedUrl;
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = 'https://' + formattedUrl;
-    }
-
     setIsSubmitting(true);
     
     try {
-      console.log("Enviando sugestão de site:", formattedUrl);
-      const result = await SiteSuggestionService.submitSuggestion(formattedUrl);
+      console.log("Enviando sugestão de site:", url);
+      const result = await SiteSuggestionService.submitSuggestion(url);
       
       console.log("Resposta do serviço:", result);
       
@@ -83,15 +59,13 @@ export function SiteSuggestionForm() {
     <div className="w-full max-w-md mx-auto mt-4">
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-grow">
-          <Input
-            type="url"
+          <URLInput
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://exemplo.com"
-            className="pr-10 bg-white/90 dark:bg-black/70 backdrop-blur-sm"
+            onChange={setUrl}
+            placeholder="exemplo.com"
+            className="bg-white/90 dark:bg-black/70 backdrop-blur-sm"
             disabled={isSubmitting}
           />
-          <LinkIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-70" />
         </div>
         <Button 
           type="submit" 
