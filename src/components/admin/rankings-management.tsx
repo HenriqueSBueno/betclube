@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { RankingCategory } from "@/types";
 import { RankingTest } from "@/components/admin/ranking-test";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RankingsManagementProps {
   categories: RankingCategory[];
@@ -29,13 +30,18 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
     setIsBatchGenerating(true);
     
     try {
-      await RankingsService.generateDailyBatch();
+      // Usar a função do banco de dados diretamente
+      const { data, error } = await supabase.rpc('generate_daily_rankings');
       
-      toast.success("All rankings successfully generated");
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Todos os rankings foram gerados com sucesso");
       onDataChange();
     } catch (error) {
-      toast.error("Failed to generate rankings");
-      console.error("Error generating rankings:", error);
+      toast.error("Falha ao gerar rankings");
+      console.error("Erro ao gerar rankings:", error);
     } finally {
       setIsBatchGenerating(false);
     }

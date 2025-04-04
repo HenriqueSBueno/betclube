@@ -23,12 +23,30 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Get request payload
-    const { category_id, site_count = 10, min_votes = 0, max_votes = 100 } = await req.json();
+    let payload;
+    try {
+      payload = await req.json();
+    } catch (e) {
+      console.error("Failed to parse JSON payload:", e);
+      return new Response(JSON.stringify({ 
+        error: "Invalid JSON payload" 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    
+    const { category_id, site_count = 10, min_votes = 0, max_votes = 100 } = payload;
     
     console.log(`Edge function called with category_id=${category_id}, site_count=${site_count}, min_votes=${min_votes}, max_votes=${max_votes}`);
 
     if (!category_id) {
-      throw new Error('Category ID is required');
+      return new Response(JSON.stringify({ 
+        error: "Category ID is required" 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
 
     // Update or create the ranking configuration
@@ -45,7 +63,15 @@ serve(async (req) => {
         { onConflict: 'category_id' }
       );
       
-    if (configError) throw configError;
+    if (configError) {
+      console.error("Error updating ranking config:", configError);
+      return new Response(JSON.stringify({ 
+        error: `Error updating ranking config: ${configError.message}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
 
     // Call the PostgreSQL function to generate the daily ranking
     const { data, error } = await supabase.rpc('generate_daily_ranking', {
@@ -55,7 +81,15 @@ serve(async (req) => {
       max_votes
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error generating ranking:", error);
+      return new Response(JSON.stringify({ 
+        error: `Error generating ranking: ${error.message}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
 
     console.log(`Ranking generated successfully with ID: ${data}`);
 
@@ -73,7 +107,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 500,
     });
   }
 });

@@ -25,11 +25,13 @@ export function RankingTest({ categories }: RankingTestProps) {
     e.preventDefault();
     
     if (!selectedCategoryId) {
-      toast.error("Please select a category");
+      toast.error("Por favor selecione uma categoria");
       return;
     }
     
     setIsGenerating(true);
+    console.log("Starting edge function test...");
+    console.log(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
     
     try {
       // Step 1: Update or insert ranking configuration
@@ -46,24 +48,29 @@ export function RankingTest({ categories }: RankingTestProps) {
           { onConflict: 'category_id' }
         );
         
-      if (configError) throw configError;
+      if (configError) {
+        console.error('Erro ao atualizar configuração:', configError);
+        throw configError;
+      }
       
-      // Step 2: Call the edge function to generate the ranking
-      const response = await supabase.functions.invoke('generate_daily_ranking', {
-        body: {
-          category_id: selectedCategoryId,
-          site_count: siteCount,
-          min_votes: minVotes,
-          max_votes: maxVotes
-        }
+      // Step 2: Call the database function directly instead of using the edge function
+      const { data, error } = await supabase.rpc('generate_daily_ranking', {
+        category_id: selectedCategoryId,
+        site_count: siteCount,
+        min_votes: minVotes,
+        max_votes: maxVotes
       });
       
-      if (response.error) throw new Error(response.error.message);
+      if (error) {
+        console.error("Erro ao chamar função do banco de dados:", error);
+        throw error;
+      }
       
-      toast.success("Ranking generated successfully");
+      console.log("Ranking gerado com sucesso:", data);
+      toast.success("Ranking gerado com sucesso");
     } catch (error) {
-      console.error("Error generating ranking:", error);
-      toast.error("Failed to generate ranking: " + (error.message || "Unknown error"));
+      console.error("Erro ao gerar ranking:", error);
+      toast.error("Falha ao gerar ranking: " + (error.message || "Erro desconhecido"));
     } finally {
       setIsGenerating(false);
     }
