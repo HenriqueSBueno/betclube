@@ -15,7 +15,7 @@ export function URLInput({
   value,
   onChange,
   showError = false,
-  errorMessage = "Please enter a valid URL",
+  errorMessage = "Por favor, digite uma URL válida",
   className,
   ...props
 }: URLInputProps) {
@@ -91,7 +91,7 @@ export function URLInput({
             (error || showError) && "border-destructive focus-visible:ring-destructive",
             className
           )}
-          placeholder="example.com"
+          placeholder="exemplo.com"
           {...props}
         />
         <LinkIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-70" />

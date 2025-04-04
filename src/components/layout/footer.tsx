@@ -10,18 +10,18 @@ export function Footer() {
             Betclub
           </Link>
           <p className="text-sm text-muted-foreground mt-1">
-            © {new Date().getFullYear()} Betclub Rankings. All rights reserved.
+            © {new Date().getFullYear()} Betclub Rankings. Todos os direitos reservados.
           </p>
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <Link to="/about" className="hover:text-foreground transition-colors">
-            About
+            Sobre
           </Link>
           <Link to="/terms" className="hover:text-foreground transition-colors">
-            Terms
+            Termos
           </Link>
           <Link to="/privacy" className="hover:text-foreground transition-colors">
-            Privacy
+            Privacidade
           </Link>
         </div>
       </div>

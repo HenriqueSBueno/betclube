@@ -18,7 +18,7 @@ const SharedRanking = () => {
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid sharing link");
+      setError("Link de compartilhamento inválido");
       setIsLoading(false);
       return;
     }
@@ -27,7 +27,7 @@ const SharedRanking = () => {
     const shared = mockDb.sharedRankings.findByToken(token);
     
     if (!shared) {
-      setError("Ranking not found or link has expired");
+      setError("Ranking não encontrado ou link expirado");
       setIsLoading(false);
       return;
     }
@@ -38,7 +38,7 @@ const SharedRanking = () => {
     const rankingData = mockDb.dailyRankings.findById(shared.rankingId);
     
     if (!rankingData) {
-      setError("Ranking data not found");
+      setError("Dados do ranking não encontrados");
       setIsLoading(false);
       return;
     }
@@ -52,7 +52,7 @@ const SharedRanking = () => {
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 container py-8 flex items-center justify-center">
-          <div className="animate-pulse text-lg">Loading shared ranking...</div>
+          <div className="animate-pulse text-lg">Carregando ranking compartilhado...</div>
         </main>
         <Footer />
       </div>
@@ -64,9 +64,9 @@ const SharedRanking = () => {
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 container py-8 flex flex-col items-center justify-center">
-          <div className="text-xl text-destructive mb-4">{error || "An error occurred"}</div>
+          <div className="text-xl text-destructive mb-4">{error || "Ocorreu um erro"}</div>
           <Link to="/">
-            <Button>Go to Homepage</Button>
+            <Button>Ir para a Página Inicial</Button>
           </Link>
         </main>
         <Footer />
@@ -87,13 +87,13 @@ const SharedRanking = () => {
       <main className="flex-1 container py-8">
         <div className="text-center mb-12">
           <div className="inline-block bg-primary/20 text-primary-foreground px-3 py-1 rounded-full text-sm mb-4">
-            Shared Ranking
+            Ranking Compartilhado
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-3">
-            Top {sortedSites.length} {ranking.categoryName} Betting Sites
+            Top {sortedSites.length} Sites de {ranking.categoryName} para Apostas
           </h1>
           <p className="text-muted-foreground">
-            Shared on {new Date(sharedRanking.shareDate).toLocaleDateString()}
+            Compartilhado em {new Date(sharedRanking.shareDate).toLocaleDateString()}
           </p>
         </div>
         
@@ -128,15 +128,15 @@ const SharedRanking = () => {
                           className="inline-block"
                         >
                           <Button variant="outline" size="sm">
-                            Visit Site
+                            Visitar Site
                           </Button>
                         </a>
                       </div>
                     </div>
                     <div className="mt-2">
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Popularity</span>
-                        <span className="text-xs font-medium">{rankedSite.votes} votes</span>
+                        <span className="text-xs text-muted-foreground">Popularidade</span>
+                        <span className="text-xs font-medium">{rankedSite.votes} votos</span>
                       </div>
                       <Progress
                         value={(rankedSite.votes / maxVotes) * 100}
@@ -152,7 +152,7 @@ const SharedRanking = () => {
         
         <div className="mt-8 text-center">
           <Link to="/">
-            <Button variant="outline">View All Rankings</Button>
+            <Button variant="outline">Ver Todos os Rankings</Button>
           </Link>
         </div>
       </main>

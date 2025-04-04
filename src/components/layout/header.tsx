@@ -71,7 +71,7 @@ export function Header() {
                 className="flex items-center space-x-1 text-sm font-medium hover:underline text-primary"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                <span>Admin Dashboard</span>
+                <span>Painel de Administração</span>
               </Link>
             )}
           </nav>
@@ -103,20 +103,20 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="flex items-center w-full">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      <span>Admin Dashboard</span>
+                      <span>Painel de Administração</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="flex items-center w-full">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>Configurações</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -126,7 +126,7 @@ export function Header() {
               className="gap-1"
             >
               <LogIn className="h-4 w-4" />
-              <span>Sign In</span>
+              <span>Entrar</span>
             </Button>
           )}
           <ThemeToggle />

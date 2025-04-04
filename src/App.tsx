@@ -13,6 +13,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import SharedRanking from "./pages/SharedRanking";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +40,9 @@ const App = () => (
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/shared/:token" element={<SharedRanking />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

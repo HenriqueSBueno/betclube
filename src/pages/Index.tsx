@@ -53,13 +53,13 @@ const Index = () => {
                 Ranking de hoje
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.
+                As melhores bets do dia, eleitas por você e atualizadas para maximizar seus ganhos.
               </p>
             </div>
             
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-pulse text-lg">Loading rankings...</div>
+                <div className="animate-pulse text-lg">Carregando rankings...</div>
               </div>
             ) : (
               <RankingTabs categories={categories} rankings={rankings} />

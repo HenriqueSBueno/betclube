@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -46,7 +47,7 @@ const Home = () => {
             <Check className="h-4 w-4" /> 100% Gratuito
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-3">Ranking de hoje</h1>
-          <p className="text-xl max-w-2xl mx-auto font-normal text-inherit">As melhores bets do dia, eleitas pela por você e atualizadas para maximizar seus ganhos.</p>
+          <p className="text-xl max-w-2xl mx-auto font-normal text-inherit">As melhores bets do dia, eleitas por você e atualizadas para maximizar seus ganhos.</p>
         </div>
         
         {isLoading ? <div className="flex justify-center items-center py-12">
