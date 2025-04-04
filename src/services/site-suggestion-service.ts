@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SiteSuggestion {
@@ -15,14 +14,10 @@ export class SiteSuggestionService {
     try {
       console.log("Enviando sugestão de site para o Supabase:", url);
       
-      // Fix: properly format parameters as separate arguments (not as an object)
-      const { data, error } = await supabase.rpc(
-        'submit_site_suggestion',
-        { 
-          url_input: url,
-          ip_address: "client-ip-auto-detected"
-        }
-      );
+      // Fix how we call the RPC function - Supabase expects the parameters differently
+      const { data, error } = await supabase.functions.invoke('submit-site-suggestion', {
+        body: { url, ip: "client-ip-auto-detected" }
+      });
 
       if (error) {
         console.error("Erro do Supabase:", error);

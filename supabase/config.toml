@@ -58,5 +58,6 @@ redirect_uri = ""
 url = ""
 
 [functions]
-[functions.generate_daily_rankings]
+[functions.submit-site-suggestion]
 verify_jwt = false
+
