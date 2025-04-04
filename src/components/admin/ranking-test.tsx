@@ -34,26 +34,54 @@ export function RankingTest({ categories }: RankingTestProps) {
     console.log(`Calling generate_daily_ranking edge function with category_id=${selectedCategoryId}, site_count=${siteCount}, min_votes=${minVotes}, max_votes=${maxVotes}`);
     
     try {
-      // Step 1: Update or insert ranking configuration
-      const { error: configError } = await supabase
+      // Step 1: First check if a config already exists for this category
+      const { data: existingConfig, error: configQueryError } = await supabase
         .from('ranking_configs')
-        .upsert(
-          {
+        .select('id')
+        .eq('category_id', selectedCategoryId)
+        .maybeSingle();
+        
+      if (configQueryError) {
+        console.error('Error checking existing configuration:', configQueryError);
+        throw configQueryError;
+      }
+      
+      // Step 2: Update or insert based on whether config exists
+      if (existingConfig) {
+        // Update existing config
+        const { error: updateError } = await supabase
+          .from('ranking_configs')
+          .update({
+            site_count: siteCount,
+            min_votes: minVotes,
+            max_votes: maxVotes,
+            last_modified: new Date().toISOString()
+          })
+          .eq('id', existingConfig.id);
+          
+        if (updateError) {
+          console.error('Error updating configuration:', updateError);
+          throw updateError;
+        }
+      } else {
+        // Insert new config
+        const { error: insertError } = await supabase
+          .from('ranking_configs')
+          .insert({
             category_id: selectedCategoryId,
             site_count: siteCount,
             min_votes: minVotes,
             max_votes: maxVotes,
             last_modified: new Date().toISOString()
-          },
-          { onConflict: 'category_id' }
-        );
-        
-      if (configError) {
-        console.error('Erro ao atualizar configuração:', configError);
-        throw configError;
+          });
+          
+        if (insertError) {
+          console.error('Error inserting configuration:', insertError);
+          throw insertError;
+        }
       }
       
-      // Step 2: Call the database function directly instead of using the edge function
+      // Step 3: Call the database function 
       const { data, error } = await supabase.rpc('generate_daily_ranking', {
         category_id: selectedCategoryId,
         site_count: siteCount,
