@@ -32,26 +32,58 @@ export function RankingsManagement({ categories, onDataChange }: RankingsManagem
     try {
       // Process each category individually using the singular function
       const results = [];
+      let successCount = 0;
+      let errorCount = 0;
       
       for (const category of categories) {
         try {
+          console.log(`Generating ranking for category ${category.name} (${category.id})`);
+          
+          // Get ranking config if it exists
+          const { data: existingConfig } = await supabase
+            .from('ranking_configs')
+            .select('*')
+            .eq('category_id', category.id)
+            .maybeSingle();
+          
+          // Use config values or defaults
+          const siteCount = existingConfig?.site_count || 10;
+          const minVotes = existingConfig?.min_votes || 0;
+          const maxVotes = existingConfig?.max_votes || 100;
+          
+          // Call generate_daily_ranking RPC function for this category
           const { data, error } = await supabase.rpc('generate_daily_ranking', {
-            category_id: category.id
+            category_id: category.id,
+            site_count: siteCount,
+            min_votes: minVotes,
+            max_votes: maxVotes
           });
           
           if (error) {
             console.error(`Error generating ranking for category ${category.name}:`, error);
+            errorCount++;
             continue;
           }
           
+          console.log(`Successfully generated ranking for ${category.name} with ID: ${data}`);
           results.push(data);
+          successCount++;
         } catch (categoryError) {
           console.error(`Exception for category ${category.name}:`, categoryError);
+          errorCount++;
         }
       }
       
-      toast.success("Todos os rankings foram gerados com sucesso");
-      onDataChange();
+      if (successCount > 0) {
+        if (errorCount > 0) {
+          toast.success(`${successCount} rankings generated successfully. ${errorCount} failed.`);
+        } else {
+          toast.success("Todos os rankings foram gerados com sucesso");
+        }
+        onDataChange();
+      } else {
+        toast.error("Falha ao gerar rankings. Nenhum ranking foi gerado.");
+      }
     } catch (error) {
       toast.error("Falha ao gerar rankings");
       console.error("Erro ao gerar rankings:", error);
