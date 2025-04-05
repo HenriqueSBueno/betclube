@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogIn, LogOut, User, LayoutDashboard, Settings } from "lucide-react";
+import { OnlineCountDisplay } from "@/components/online-users/online-count-display";
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -77,7 +78,8 @@ export function Header() {
           </nav>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <OnlineCountDisplay />
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
