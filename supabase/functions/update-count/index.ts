@@ -21,6 +21,8 @@ serve(async (req) => {
   }
 
   try {
+    // Log the request method and path
+    console.log(`Request received: ${req.method} ${new URL(req.url).pathname}`);
     console.log("Running update-count function to generate organic values");
     
     // Call the database function to update the online users count
@@ -33,9 +35,11 @@ serve(async (req) => {
     
     console.log("Successfully updated online users count");
     
+    // Return JSON response
     return new Response(JSON.stringify({ 
       success: true,
-      message: "Online users count updated successfully"
+      message: "Online users count updated successfully",
+      timestamp: new Date().toISOString()
     }), {
       headers: { 
         ...corsHeaders,
@@ -47,7 +51,8 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: false,
-      error: err.message 
+      error: err.message,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { 
