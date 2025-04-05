@@ -90,6 +90,33 @@ export type Database = {
           },
         ]
       }
+      online_users: {
+        Row: {
+          id: string
+          min_count: number
+          max_count: number
+          current_count: number
+          update_interval: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          min_count: number
+          max_count: number
+          current_count: number
+          update_interval: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          min_count?: number
+          max_count?: number
+          current_count?: number
+          update_interval?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
