@@ -92,28 +92,52 @@ export type Database = {
       }
       online_users: {
         Row: {
-          id: string
-          min_count: number
-          max_count: number
           current_count: number
+          id: string
+          max_count: number
+          min_count: number
           update_interval: number
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
+          current_count?: number
           id?: string
-          min_count: number
-          max_count: number
-          current_count: number
-          update_interval: number
-          updated_at?: string
+          max_count?: number
+          min_count?: number
+          update_interval?: number
+          updated_at?: string | null
         }
         Update: {
-          id?: string
-          min_count?: number
-          max_count?: number
           current_count?: number
+          id?: string
+          max_count?: number
+          min_count?: number
           update_interval?: number
-          updated_at?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      online_users_log: {
+        Row: {
+          created_at: string | null
+          id: number
+          new_count: number | null
+          old_count: number | null
+          update_interval: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          new_count?: number | null
+          old_count?: number | null
+          update_interval?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          new_count?: number | null
+          old_count?: number | null
+          update_interval?: number | null
         }
         Relationships: []
       }
@@ -357,6 +381,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_update_intervals: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          log_time: string
+          old_value: number
+          new_value: number
+          configured_interval_ms: number
+          actual_interval_ms: number
+          is_delayed: boolean
+        }[]
+      }
       delete_rankings_by_category: {
         Args: {
           p_category_id: string
@@ -379,6 +414,10 @@ export type Database = {
             }
             Returns: string
           }
+      generate_organic_value: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_sharing_token: {
         Args: {
           ranking_id: string
@@ -397,12 +436,38 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      random_between: {
+        Args: {
+          min_val: number
+          max_val: number
+        }
+        Returns: number
+      }
+      should_update_online_users: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       submit_site_suggestion: {
         Args: {
           url_input: string
           ip_address: string
         }
         Returns: Json
+      }
+      test_online_users_log: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          update_number: number
+          old_value: number
+          new_value: number
+          interval_ms: number
+          time_of_update: string
+          elapsed_ms: number
+        }[]
+      }
+      update_online_users_count: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
