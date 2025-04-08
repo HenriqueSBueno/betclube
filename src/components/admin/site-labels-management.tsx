@@ -90,9 +90,10 @@ export function SiteLabelsManagement() {
           description: `O rótulo ${values.name} foi atualizado com sucesso.`
         });
       } else {
-        // Criar novo
+        // Certifique-se de que estamos passando todos os campos obrigatórios
         await SiteLabelService.create({
-          ...values,
+          name: values.name,
+          color: values.color,
           admin_owner_id: user.id
         });
         toast({
