@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Plus, Pencil, Trash } from "lucide-react";
@@ -271,6 +270,7 @@ export function SiteLabelsManagement() {
                           size="icon"
                           onClick={() => handleEdit(label)}
                           disabled={isLoading}
+                          aria-label={`Editar ${label.name}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -279,6 +279,7 @@ export function SiteLabelsManagement() {
                           size="icon"
                           onClick={() => handleConfirmDelete(label.id)}
                           disabled={isLoading}
+                          aria-label={`Excluir ${label.name}`}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>

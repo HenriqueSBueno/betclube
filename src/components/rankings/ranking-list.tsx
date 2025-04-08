@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { SiteCard } from "./site-card";
 import { RankedSite, DailyRanking } from "@/types";
@@ -6,6 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { URLInput } from "@/components/ui/url-input";
+import { SiteSuggestionService } from "@/services/site-suggestion-service";
+import { useAuth } from '@/hooks/use-auth';
+import { VotingService } from '@/services/voting.service';
 
 interface RankingListProps {
   categoryId?: string;
@@ -27,7 +30,9 @@ export function RankingList({
   const [currentRankingId, setCurrentRankingId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>("");
   const [suggestionUrl, setSuggestionUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Optimized fetch function using useCallback to prevent unnecessary re-renders
   const fetchLatestData = useCallback(async () => {
@@ -154,22 +159,54 @@ export function RankingList({
     });
   }, []);
 
-  const handleSubmitSuggestion = (e: React.FormEvent) => {
+  const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!suggestionUrl.trim()) {
+    if (!user) {
       toast({
-        variant: "destructive",
-        title: "URL inválida",
-        description: "Por favor, digite um link válido.",
+        title: "Login necessário",
+        description: "Faça login para sugerir um site",
+        variant: "destructive"
       });
       return;
     }
 
-    toast({
-      title: "Sugestão enviada",
-      description: "Obrigado pela sua contribuição!",
-    });
-    setSuggestionUrl('');
+    if (!suggestionUrl) {
+      toast({
+        title: "URL inválida",
+        description: "Por favor, insira uma URL válida",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await SiteSuggestionService.suggestSite(suggestionUrl, user.id);
+      toast({
+        title: "Sugestão enviada",
+        description: "Sua sugestão foi enviada com sucesso!"
+      });
+      setSuggestionUrl('');
+    } catch (error: any) {
+      console.error("Erro ao sugerir site:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao sugerir site",
+        description: error.message || "Não foi possível enviar sua sugestão. Tente novamente."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVote = async (rankingId: string, siteId: string, userId: string) => {
+    try {
+      const newVotes = await VotingService.registerVote(siteId, rankingId, userId);
+      return true;
+    } catch (error) {
+      console.error("Erro ao votar:", error);
+      return false;
+    }
   };
 
   if (isLoading) {
@@ -185,12 +222,19 @@ export function RankingList({
   const sortedSites = [...sites].sort((a, b) => b.votes - a.votes);
 
   return (
-    <>
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">
-          Top {sortedSites.length} Sites de {categoryName || "Apostas"}
-        </h2>
-      </div>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmitSuggestion} className="flex flex-col sm:flex-row gap-4">
+        <URLInput
+          value={suggestionUrl}
+          onChange={(e) => setSuggestionUrl(e.target.value)}
+          placeholder="Digite a URL do site que deseja sugerir"
+          className="flex-1"
+        />
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enviando..." : "Sugerir Site"}
+        </Button>
+      </form>
+
       <div className="space-y-4">
         {sortedSites.map((site, index) => (
           <SiteCard
@@ -198,28 +242,12 @@ export function RankingList({
             rankedSite={site}
             index={index}
             maxVotes={Math.max(...sortedSites.map(s => s.votes))}
-            isTopThree={index < 3}
-            rankingId={currentRankingId || ""}
-            onVoteUpdate={handleVoteUpdate}
+            isInteractive={isInteractive}
+            rankingId={currentRankingId || ''}
+            onVote={handleVote}
           />
         ))}
       </div>
-
-      <div className="mt-12 pt-6 border-t border-muted">
-        <div className="text-center mb-4">
-          <p className="text-muted-foreground">Não encontrou o melhor site? Ajude os outros com seu link abaixo</p>
-        </div>
-        <form onSubmit={handleSubmitSuggestion} className="flex flex-col sm:flex-row gap-3">
-          <Input
-            type="url"
-            placeholder="https://seu-site-favorito.com"
-            value={suggestionUrl}
-            onChange={(e) => setSuggestionUrl(e.target.value)}
-            className="flex-grow"
-          />
-          <Button type="submit">Enviar</Button>
-        </form>
-      </div>
-    </>
+    </div>
   );
 }
