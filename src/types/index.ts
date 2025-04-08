@@ -1,4 +1,3 @@
-
 export type UserRole = "admin" | "user";
 
 export interface User {
@@ -85,4 +84,13 @@ export interface SiteManagementProps {
 export interface RankingsManagementProps {
   onDataChange: () => void;
   categories?: RankingCategory[];
+}
+
+export interface SiteLabel {
+  id: string;
+  name: string;
+  color: string;
+  admin_owner_id: string;
+  created_at: Date;
+  updated_at: Date;
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
@@ -9,6 +8,7 @@ import { SiteManagement } from "@/components/admin/site-management";
 import { CategoryManagement } from "@/components/admin/category-management";
 import { RankingsManagement } from "@/components/admin/rankings-management";
 import { SiteSuggestionManagement } from "@/components/admin/site-suggestions-management";
+import { SiteLabelsManagement } from "@/components/admin/site-labels-management";
 import { TestSiteAdd } from "@/components/admin/test-site-add";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,13 +26,11 @@ const AdminDashboard = () => {
   const [accessDenied, setAccessDenied] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Estados para o contador de usuários online
   const [minUsers, setMinUsers] = useState("100");
   const [maxUsers, setMaxUsers] = useState("1000");
   const [updateInterval, setUpdateInterval] = useState("3");
   const [currentCount, setCurrentCount] = useState(0);
 
-  // Carregar configurações iniciais do contador
   useEffect(() => {
     const loadOnlineUsersConfig = async () => {
       try {
@@ -57,7 +55,6 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated, isAdmin, toast]);
 
-  // Atualizar o contador em tempo real
   useEffect(() => {
     let isMounted = true;
     let intervalId: NodeJS.Timeout;
@@ -75,13 +72,10 @@ const AdminDashboard = () => {
       }
     };
 
-    // Atualizar imediatamente
     updateCounter();
 
-    // Configurar intervalo de atualização
     intervalId = setInterval(updateCounter, 3000);
 
-    // Limpar intervalo e marcar componente como desmontado
     return () => {
       isMounted = false;
       if (intervalId) {
@@ -90,16 +84,14 @@ const AdminDashboard = () => {
     };
   }, []);
 
-  // Handler para salvar configurações do contador
   const handleSaveOnlineUsersConfig = async () => {
     try {
       setIsUpdating(true);
       
       const min = parseInt(minUsers);
       const max = parseInt(maxUsers);
-      const interval = parseInt(updateInterval) * 1000; // Converter para milissegundos
+      const interval = parseInt(updateInterval) * 1000;
 
-      // Validações
       if (isNaN(min) || isNaN(max) || isNaN(interval)) {
         throw new Error("Por favor, preencha todos os campos com valores numéricos válidos");
       }
@@ -138,7 +130,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Carregar categorias
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -159,7 +150,6 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated, isAdmin, refreshKey, toast]);
 
-  // Verificar acesso
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || !isAdmin)) {
       toast({
@@ -186,6 +176,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="rankings">Rankings</TabsTrigger>
             <TabsTrigger value="suggestions">Site Suggestions</TabsTrigger>
+            <TabsTrigger value="labels">Rótulos</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="online-users">Online Users</TabsTrigger>
           </TabsList>
@@ -213,6 +204,10 @@ const AdminDashboard = () => {
             <SiteSuggestionManagement />
           </TabsContent>
 
+          <TabsContent value="labels">
+            <SiteLabelsManagement />
+          </TabsContent>
+
           <TabsContent value="users">
             <UserManagement />
           </TabsContent>
@@ -227,7 +222,6 @@ const AdminDashboard = () => {
               </div>
               <div className="w-full">
                 <div className="space-y-6">
-                  {/* Grid de configurações */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label htmlFor="min" className="text-sm font-medium">
@@ -272,7 +266,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Botão Salvar */}
                   <Button 
                     onClick={handleSaveOnlineUsersConfig}
                     disabled={isUpdating}
@@ -281,7 +274,6 @@ const AdminDashboard = () => {
                     {isUpdating ? "Salvando..." : "Salvar Configurações"}
                   </Button>
 
-                  {/* Seção Valor Atual */}
                   <div className="border-t pt-4">
                     <h3 className="text-lg font-medium mb-2">Valor Atual</h3>
                     <p className="text-2xl font-bold">{currentCount} usuários</p>

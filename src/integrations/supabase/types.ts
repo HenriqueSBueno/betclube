@@ -301,6 +301,33 @@ export type Database = {
           },
         ]
       }
+      site_labels: {
+        Row: {
+          admin_owner_id: string
+          color: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_owner_id: string
+          color: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          admin_owner_id?: string
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_suggestions: {
         Row: {
           created_at: string
