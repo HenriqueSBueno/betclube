@@ -4,6 +4,8 @@ import { SiteLabel } from "@/types";
 
 export class SiteLabelService {
   static async getAll(): Promise<SiteLabel[]> {
+    console.log("Fetching all labels from database");
+    
     const { data, error } = await supabase
       .from("site_labels")
       .select("*")
@@ -14,6 +16,7 @@ export class SiteLabelService {
       throw error;
     }
 
+    console.log("Labels fetched successfully:", data);
     return data || [];
   }
 
