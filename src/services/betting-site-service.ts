@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BettingSite } from "@/types";
 
@@ -248,4 +247,4 @@ export class BettingSiteService {
       return false;
     }
   }
-} 
+}
