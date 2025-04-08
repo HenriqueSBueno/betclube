@@ -94,7 +94,8 @@ export class BettingSiteService {
         registrationDate: new Date(data.registration_date),
         adminOwnerId: data.admin_owner_id,
         commission: data.commission,
-        ltv: data.ltv
+        ltv: data.ltv,
+        siteLabels: data.site_labels || []
       };
     } catch (error) {
       console.error("Erro ao buscar site de apostas por nome:", error);
@@ -125,7 +126,8 @@ export class BettingSiteService {
         registrationDate: new Date(site.registration_date),
         adminOwnerId: site.admin_owner_id,
         commission: site.commission,
-        ltv: site.ltv
+        ltv: site.ltv,
+        siteLabels: site.site_labels || []
       }));
     } catch (error) {
       console.error("Erro ao buscar sites de apostas por categoria:", error);
