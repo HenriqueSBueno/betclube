@@ -63,7 +63,7 @@ export function SiteCard({
     }
   }, [user, rankingId, rankedSite.siteId]);
 
-  // Load labels
+  // Load labels for all users (logged in or not)
   useEffect(() => {
     const fetchLabels = async () => {
       try {
@@ -77,6 +77,7 @@ export function SiteCard({
         console.error("Error loading labels:", error);
       }
     };
+    
     fetchLabels();
   }, []);
 
@@ -167,10 +168,9 @@ export function SiteCard({
                     rankedSite.site.siteLabels.map(labelName => (
                       <Badge 
                         key={labelName} 
-                        className="text-xs"
+                        className="text-xs text-white"
                         style={{
-                          backgroundColor: labels[labelName] || '#888888',
-                          color: '#ffffff'
+                          backgroundColor: labels[labelName] || '#888888'
                         }}
                       >
                         {labelName}
