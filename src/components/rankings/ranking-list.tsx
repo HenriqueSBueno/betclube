@@ -74,7 +74,8 @@ export function RankingList({
             logo_url,
             category,
             registration_date,
-            admin_owner_id
+            admin_owner_id,
+            site_labels
           )
         `)
         .eq("ranking_id", ranking.id)
@@ -94,7 +95,8 @@ export function RankingList({
           logoUrl: rs.site.logo_url,
           category: rs.site.category || [],
           registrationDate: new Date(rs.site.registration_date),
-          adminOwnerId: rs.site.admin_owner_id
+          adminOwnerId: rs.site.admin_owner_id,
+          siteLabels: rs.site.site_labels || []
         },
         votes: rs.votes,
         position: rs.position
