@@ -1,8 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { 
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -14,11 +23,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { mockDb } from "@/lib/mockDb";
-import { BettingSite, RankingCategory } from "@/types";
+import { BettingSite, RankingCategory, SiteLabel } from "@/types";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { SiteLabelService } from "@/services/site-label-service";
+import { BettingSiteService } from "@/services/betting-site-service";
 
 const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
@@ -27,6 +39,7 @@ const formSchema = z.object({
   categories: z.array(z.string()).nonempty("Select at least one category."),
   commission: z.number().min(0).max(100).optional(),
   ltv: z.number().min(0).optional(),
+  siteLabels: z.array(z.string()).optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -42,6 +55,7 @@ interface EditSiteFormProps {
 export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: EditSiteFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableLabels, setAvailableLabels] = useState<SiteLabel[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -52,11 +66,26 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
       categories: site.category,
       commission: site.commission || 0,
       ltv: site.ltv || 0,
+      siteLabels: site.siteLabels || []
     }
   });
 
   useEffect(() => {
-    if (isOpen) {
+    // Load available labels
+    const loadLabels = async () => {
+      try {
+        const labels = await SiteLabelService.getAll();
+        setAvailableLabels(labels);
+      } catch (error) {
+        console.error("Error loading labels:", error);
+      }
+    };
+    
+    loadLabels();
+  }, []);
+
+  useEffect(() => {
+    if (site && isOpen) {
       form.reset({
         name: site.name,
         url: site.url,
@@ -64,22 +93,29 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
         categories: site.category,
         commission: site.commission || 0,
         ltv: site.ltv || 0,
+        siteLabels: site.siteLabels || []
       });
     }
-  }, [isOpen, site, form]);
+  }, [site, isOpen, form]);
 
   const onSubmit = async (values: FormValues) => {
+    console.log("[EditSiteForm] Form submission values:", values);
+    
     setIsSubmitting(true);
     
     try {
-      const updatedSite = mockDb.bettingSites.update(site.id, {
+      // Use BettingSiteService instead of mockDb
+      const updatedSite = await BettingSiteService.update(site.id, {
         name: values.name,
         url: values.url,
         description: values.description,
         category: values.categories,
         commission: values.commission,
-        ltv: values.ltv
+        ltv: values.ltv,
+        siteLabels: values.siteLabels
       });
+      
+      console.log("[EditSiteForm] Site updated successfully:", updatedSite);
       
       toast({
         title: "Site updated",
@@ -89,7 +125,7 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to update site:", error);
+      console.error("[EditSiteForm] Failed to update site:", error);
       toast({
         variant: "destructive",
         title: "Failed to update site",
@@ -100,12 +136,34 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
     }
   };
 
+  const handleLabelSelect = (labelName: string) => {
+    const currentLabels = form.getValues().siteLabels || [];
+    
+    if (currentLabels.includes(labelName)) {
+      form.setValue(
+        'siteLabels', 
+        currentLabels.filter(l => l !== labelName)
+      );
+    } else {
+      form.setValue('siteLabels', [...currentLabels, labelName]);
+    }
+  };
+
+  const getLabelColor = (labelName: string) => {
+    const label = availableLabels.find(l => l.name === labelName);
+    return label?.color || "#888888";
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Site: {site.name}</DialogTitle>
+          <DialogTitle>Edit Betting Site</DialogTitle>
+          <DialogDescription>
+            Update the betting site details.
+          </DialogDescription>
         </DialogHeader>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -165,6 +223,9 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
                 <FormItem>
                   <div className="mb-4">
                     <FormLabel>Categories</FormLabel>
+                    <FormDescription>
+                      Select all categories that apply to this betting site.
+                    </FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {categories.map((category) => (
@@ -206,8 +267,85 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
               )}
             />
             
-            {/* Campos apenas para admins */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Labels selection */}
+            <FormField
+              control={form.control}
+              name="siteLabels"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="mb-4">
+                    <FormLabel>Labels</FormLabel>
+                    <FormDescription>
+                      Select labels to apply to this site.
+                    </FormDescription>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Applied Labels:</div>
+                      <div className="flex flex-wrap gap-2 min-h-10">
+                        {field.value && field.value.length > 0 ? (
+                          field.value.map(labelName => (
+                            <Badge 
+                              key={labelName} 
+                              className="flex items-center gap-1"
+                              style={{backgroundColor: getLabelColor(labelName)}}
+                            >
+                              {labelName}
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(field.value?.filter(l => l !== labelName));
+                                }}
+                                className="rounded-full hover:bg-black/20 flex items-center justify-center h-4 w-4"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground">No labels selected</div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Available Labels:</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableLabels.length > 0 ? (
+                          availableLabels.map(label => (
+                            <div 
+                              key={label.id} 
+                              className="flex items-center space-x-2 border rounded p-2 cursor-pointer hover:bg-accent"
+                              onClick={() => handleLabelSelect(label.name)}
+                            >
+                              <Checkbox 
+                                checked={field.value?.includes(label.name)}
+                                onCheckedChange={() => handleLabelSelect(label.name)}
+                              />
+                              <span 
+                                className="h-3 w-3 rounded-full" 
+                                style={{backgroundColor: label.color}}
+                              />
+                              <span>{label.name}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground col-span-2">
+                            No labels available. Create labels in the Labels section.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Admin fields */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
               <FormField
                 control={form.control}
                 name="commission"
@@ -226,6 +364,9 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
                         disabled={isSubmitting} 
                       />
                     </FormControl>
+                    <FormDescription>
+                      Admin-only field for tracking affiliate commission.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -248,20 +389,28 @@ export function EditSiteForm({ site, categories, isOpen, onClose, onSuccess }: E
                         disabled={isSubmitting} 
                       />
                     </FormControl>
+                    <FormDescription>
+                      Admin-only field for customer lifetime value.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                {isSubmitting ? "Updating..." : "Update Site"}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

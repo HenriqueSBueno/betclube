@@ -10,6 +10,8 @@ import { useState, useEffect } from "react";
 import { VotingService } from "@/services/voting-service";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { SiteLabelService } from "@/services/site-label-service";
 
 interface SiteCardProps {
   rankedSite: RankedSite;
@@ -47,6 +49,7 @@ export function SiteCard({
   const [hasVoted, setHasVoted] = useState(false);
   const [remainingVotes, setRemainingVotes] = useState(3);
   const isMobile = useIsMobile();
+  const [labels, setLabels] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) {
@@ -59,6 +62,23 @@ export function SiteCard({
       });
     }
   }, [user, rankingId, rankedSite.siteId]);
+
+  // Load labels
+  useEffect(() => {
+    const fetchLabels = async () => {
+      try {
+        const labelsList = await SiteLabelService.getAll();
+        const labelsMap: Record<string, string> = {};
+        labelsList.forEach(label => {
+          labelsMap[label.name] = label.color;
+        });
+        setLabels(labelsMap);
+      } catch (error) {
+        console.error("Error loading labels:", error);
+      }
+    };
+    fetchLabels();
+  }, []);
 
   const handleVote = async () => {
     if (!user) {
@@ -135,9 +155,29 @@ export function SiteCard({
                 <h3 className="text-lg font-medium line-clamp-1">
                   {rankedSite.site.name}
                 </h3>
-                {isTopThree && <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary dark:bg-primary text-background dark:text-background">
-                    <TrendingUp className="h-3 w-3 mr-1" /> Em Alta
-                  </span>}
+                <div className="flex flex-wrap gap-1 items-center">
+                  {isTopThree && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary dark:bg-primary text-background dark:text-background">
+                      <TrendingUp className="h-3 w-3 mr-1" /> Em Alta
+                    </span>
+                  )}
+                  
+                  {/* Display site labels */}
+                  {rankedSite.site.siteLabels && rankedSite.site.siteLabels.length > 0 && (
+                    rankedSite.site.siteLabels.map(labelName => (
+                      <Badge 
+                        key={labelName} 
+                        className="text-xs"
+                        style={{
+                          backgroundColor: labels[labelName] || '#888888',
+                          color: '#ffffff'
+                        }}
+                      >
+                        {labelName}
+                      </Badge>
+                    ))
+                  )}
+                </div>
               </div>
               <Button 
                 variant={isTopThree ? "custom" : "outline"} 

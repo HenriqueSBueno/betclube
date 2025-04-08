@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BettingSite } from "@/types";
 
@@ -25,7 +26,8 @@ export class BettingSiteService {
         registrationDate: new Date(site.registration_date),
         adminOwnerId: site.admin_owner_id,
         commission: site.commission,
-        ltv: site.ltv
+        ltv: site.ltv,
+        siteLabels: site.site_labels || []
       }));
     } catch (error) {
       console.error("Erro ao buscar sites de apostas:", error);
@@ -58,7 +60,8 @@ export class BettingSiteService {
         registrationDate: new Date(data.registration_date),
         adminOwnerId: data.admin_owner_id,
         commission: data.commission,
-        ltv: data.ltv
+        ltv: data.ltv,
+        siteLabels: data.site_labels || []
       };
     } catch (error) {
       console.error("Erro ao buscar site de apostas:", error);
@@ -145,7 +148,8 @@ export class BettingSiteService {
         registration_date: site.registrationDate.toISOString(),
         admin_owner_id: site.adminOwnerId,
         commission: site.commission,
-        ltv: site.ltv
+        ltv: site.ltv,
+        site_labels: site.siteLabels || []
       };
 
       const { data, error } = await supabase
@@ -168,7 +172,8 @@ export class BettingSiteService {
         registrationDate: new Date(data.registration_date),
         adminOwnerId: data.admin_owner_id,
         commission: data.commission,
-        ltv: data.ltv
+        ltv: data.ltv,
+        siteLabels: data.site_labels || []
       };
     } catch (error) {
       console.error("Erro ao criar site de apostas:", error);
@@ -192,6 +197,7 @@ export class BettingSiteService {
       if (site.adminOwnerId) supabaseSite.admin_owner_id = site.adminOwnerId;
       if (site.commission !== undefined) supabaseSite.commission = site.commission;
       if (site.ltv !== undefined) supabaseSite.ltv = site.ltv;
+      if (site.siteLabels) supabaseSite.site_labels = site.siteLabels;
 
       const { data, error } = await supabase
         .from('betting_sites')
@@ -214,7 +220,8 @@ export class BettingSiteService {
         registrationDate: new Date(data.registration_date),
         adminOwnerId: data.admin_owner_id,
         commission: data.commission,
-        ltv: data.ltv
+        ltv: data.ltv,
+        siteLabels: data.site_labels || []
       };
     } catch (error) {
       console.error("Erro ao atualizar site de apostas:", error);

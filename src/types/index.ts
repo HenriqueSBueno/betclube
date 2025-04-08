@@ -19,6 +19,7 @@ export interface BettingSite {
   adminOwnerId: string;
   commission?: number; // Campo de comissão (apenas para admins)
   ltv?: number; // Campo LTV - Lifetime Value (apenas para admins)
+  siteLabels?: string[]; // Added site labels field
 }
 
 export interface RankingCategory {

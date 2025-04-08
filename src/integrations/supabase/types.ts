@@ -20,6 +20,7 @@ export type Database = {
           ltv: number | null
           name: string
           registration_date: string
+          site_labels: string[] | null
           url: string
         }
         Insert: {
@@ -32,6 +33,7 @@ export type Database = {
           ltv?: number | null
           name: string
           registration_date?: string
+          site_labels?: string[] | null
           url: string
         }
         Update: {
@@ -44,6 +46,7 @@ export type Database = {
           ltv?: number | null
           name?: string
           registration_date?: string
+          site_labels?: string[] | null
           url?: string
         }
         Relationships: []

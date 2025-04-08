@@ -4,13 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, Edit, ExternalLink } from "lucide-react";
+import { 
+  Trash, 
+  Edit, 
+  ExternalLink, 
+  Tag,
+  X
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSiteForm } from "@/components/admin/add-site-form";
 import { EditSiteForm } from "@/components/admin/edit-site-form";
 import { CsvImportExport } from "@/components/admin/csv-import-export";
 import { mockDb } from "@/lib/mockDb";
-import { BettingSite, RankingCategory } from "@/types";
+import { BettingSite, RankingCategory, SiteLabel } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   AlertDialog,
@@ -24,6 +30,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { SiteLabelService } from "@/services/site-label-service";
+import { BettingSiteService } from "@/services/betting-site-service";
 
 interface SiteManagementProps {
   categories: RankingCategory[];
@@ -35,6 +49,10 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
   const [editingSite, setEditingSite] = useState<BettingSite | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [labels, setLabels] = useState<SiteLabel[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  const [editingSiteLabels, setEditingSiteLabels] = useState<string[]>([]);
+  const [managingLabelsForSite, setManagingLabelsForSite] = useState<BettingSite | null>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -44,7 +62,8 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
       setIsLoading(true);
       try {
         console.log("[SiteManagement] Loading betting sites");
-        const sitesList = await mockDb.bettingSites.getAll();
+        // Use the BettingSiteService instead of mockDb
+        const sitesList = await BettingSiteService.getAll();
         console.log("[SiteManagement] Sites loaded:", sitesList);
         setSites(sitesList);
       } catch (error) {
@@ -60,6 +79,25 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     };
 
     loadSites();
+  }, [toast]);
+
+  // Load labels
+  useEffect(() => {
+    const loadLabels = async () => {
+      try {
+        const labelsList = await SiteLabelService.getAll();
+        setLabels(labelsList);
+      } catch (error) {
+        console.error("[SiteManagement] Error loading labels:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load site labels."
+        });
+      }
+    };
+
+    loadLabels();
   }, [toast]);
 
   const toggleSiteSelection = (siteId: string) => {
@@ -80,12 +118,13 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
 
   const deleteSite = async (siteId: string) => {
     try {
-      const deletedSite = await mockDb.bettingSites.delete(siteId);
-      if (deletedSite) {
+      // Use BettingSiteService instead of mockDb
+      const success = await BettingSiteService.delete(siteId);
+      if (success) {
         setSites(prevSites => prevSites.filter(site => site.id !== siteId));
         toast({
           title: "Site deleted",
-          description: `${deletedSite.name} has been successfully removed.`
+          description: "The site has been successfully removed."
         });
         onDataChange();
       }
@@ -105,7 +144,7 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
     
     for (const siteId of selectedSites) {
       try {
-        const deleted = await mockDb.bettingSites.delete(siteId);
+        const deleted = await BettingSiteService.delete(siteId);
         if (deleted) successCount++;
         else failCount++;
       } catch (error) {
@@ -133,13 +172,61 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   const handleDataChange = async () => {
     console.log("[SiteManagement] handleDataChange called - refreshing data");
     try {
-      const updatedSites = await mockDb.bettingSites.getAll();
+      const updatedSites = await BettingSiteService.getAll();
       console.log("[SiteManagement] Updated sites data:", updatedSites);
       setSites(updatedSites);
       onDataChange();
     } catch (error) {
       console.error("[SiteManagement] Error refreshing sites data:", error);
     }
+  };
+
+  const openLabelsManager = (site: BettingSite) => {
+    setManagingLabelsForSite(site);
+    setEditingSiteLabels(site.siteLabels || []);
+  };
+
+  const handleLabelSelect = (labelName: string) => {
+    setEditingSiteLabels(prev => 
+      prev.includes(labelName)
+        ? prev.filter(name => name !== labelName)
+        : [...prev, labelName]
+    );
+  };
+
+  const saveLabels = async () => {
+    if (!managingLabelsForSite) return;
+    
+    try {
+      await BettingSiteService.update(managingLabelsForSite.id, {
+        siteLabels: editingSiteLabels
+      });
+      
+      setSites(prev => prev.map(site => 
+        site.id === managingLabelsForSite.id 
+          ? { ...site, siteLabels: editingSiteLabels } 
+          : site
+      ));
+      
+      toast({
+        title: "Labels updated",
+        description: "Labels have been successfully updated for this site."
+      });
+      
+      setManagingLabelsForSite(null);
+    } catch (error) {
+      console.error("Error updating site labels:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update site labels."
+      });
+    }
+  };
+
+  const getLabelColor = (labelName: string) => {
+    const label = labels.find(l => l.name === labelName);
+    return label?.color || "#888888";
   };
 
   return (
@@ -212,6 +299,37 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
                             <div className="font-medium">{site.name}</div>
                           </div>
                           <div className="flex items-center space-x-1">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openLabelsManager(site)}
+                                >
+                                  <Tag className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-auto">
+                                <div className="space-y-2">
+                                  <div className="font-medium">Manage Labels</div>
+                                  <div className="flex flex-wrap gap-2 max-w-[250px]">
+                                    {site.siteLabels && site.siteLabels.length > 0 ? (
+                                      site.siteLabels.map(labelName => (
+                                        <Badge 
+                                          key={labelName} 
+                                          style={{backgroundColor: getLabelColor(labelName)}}
+                                        >
+                                          {labelName}
+                                        </Badge>
+                                      ))
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground">No labels assigned</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -240,6 +358,25 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
                             </AlertDialog>
                           </div>
                         </div>
+                        
+                        {site.siteLabels && site.siteLabels.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {site.siteLabels.map(labelName => (
+                              <Badge 
+                                key={labelName} 
+                                variant="outline" 
+                                className="text-xs"
+                                style={{
+                                  borderColor: getLabelColor(labelName),
+                                  color: getLabelColor(labelName)
+                                }}
+                              >
+                                {labelName}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
                         <div className="text-sm text-muted-foreground flex items-center space-x-1">
                           <ExternalLink className="h-3 w-3" />
                           <a href={site.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
@@ -274,11 +411,11 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
                             onCheckedChange={toggleAllSites}
                           />
                         </TableHead>
-                        <TableHead className="min-w-[200px]">Site</TableHead>
+                        <TableHead className="min-w-[250px]">Site</TableHead>
                         <TableHead className="min-w-[150px]">Categories</TableHead>
                         <TableHead className="min-w-[100px]">Commission</TableHead>
                         <TableHead className="min-w-[100px]">LTV</TableHead>
-                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                        <TableHead className="w-[130px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -291,7 +428,26 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
                             />
                           </TableCell>
                           <TableCell className="p-2">
-                            <div className="font-medium">{site.name}</div>
+                            <div className="font-medium flex items-center gap-2">
+                              {site.name}
+                              {site.siteLabels && site.siteLabels.length > 0 && (
+                                <div className="flex flex-wrap gap-1 ml-2">
+                                  {site.siteLabels.map(labelName => (
+                                    <Badge 
+                                      key={labelName} 
+                                      variant="outline" 
+                                      className="text-xs"
+                                      style={{
+                                        borderColor: getLabelColor(labelName),
+                                        color: getLabelColor(labelName)
+                                      }}
+                                    >
+                                      {labelName}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                             <div className="text-sm text-muted-foreground flex items-center space-x-1 w-full max-w-[250px]">
                               <ExternalLink className="h-3 w-3 flex-shrink-0" />
                               <a 
@@ -322,6 +478,40 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
                           </TableCell>
                           <TableCell className="p-2 text-right">
                             <div className="flex items-center justify-end space-x-1">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 opacity-70 group-hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openLabelsManager(site);
+                                    }}
+                                  >
+                                    <Tag className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent align="end" className="w-auto">
+                                  <div className="space-y-2">
+                                    <div className="font-medium">Manage Labels</div>
+                                    <div className="flex flex-wrap gap-2 max-w-[250px]">
+                                      {site.siteLabels && site.siteLabels.length > 0 ? (
+                                        site.siteLabels.map(labelName => (
+                                          <Badge 
+                                            key={labelName} 
+                                            style={{backgroundColor: getLabelColor(labelName)}}
+                                          >
+                                            {labelName}
+                                          </Badge>
+                                        ))
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">No labels assigned</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -365,6 +555,81 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
           )}
         </CardContent>
       </Card>
+      
+      {/* Labels Manager Dialog */}
+      {managingLabelsForSite && (
+        <AlertDialog open={!!managingLabelsForSite} onOpenChange={(open) => !open && setManagingLabelsForSite(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Manage Labels for {managingLabelsForSite.name}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Select labels to apply to this site.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="font-medium">Applied Labels:</div>
+                  <div className="flex flex-wrap gap-2 min-h-10">
+                    {editingSiteLabels.length > 0 ? (
+                      editingSiteLabels.map(labelName => (
+                        <Badge 
+                          key={labelName} 
+                          className="flex items-center gap-1"
+                          style={{backgroundColor: getLabelColor(labelName)}}
+                        >
+                          {labelName}
+                          <button 
+                            onClick={() => setEditingSiteLabels(prev => prev.filter(l => l !== labelName))}
+                            className="rounded-full hover:bg-black/20 flex items-center justify-center h-4 w-4"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No labels selected</div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="font-medium">Available Labels:</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {labels.length > 0 ? (
+                      labels.map(label => (
+                        <div 
+                          key={label.id} 
+                          className="flex items-center space-x-2 border rounded p-2 cursor-pointer hover:bg-accent"
+                          onClick={() => handleLabelSelect(label.name)}
+                        >
+                          <Checkbox 
+                            checked={editingSiteLabels.includes(label.name)}
+                            onCheckedChange={() => handleLabelSelect(label.name)}
+                          />
+                          <span 
+                            className="h-3 w-3 rounded-full" 
+                            style={{backgroundColor: label.color}}
+                          />
+                          <span>{label.name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground col-span-2">
+                        No labels available. Create labels in the Labels section.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={saveLabels}>Save Labels</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       
       {editingSite && (
         <EditSiteForm
