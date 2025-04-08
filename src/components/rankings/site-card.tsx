@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, TrendingUp, Flame, ArrowRight } from "lucide-react";
@@ -67,14 +66,11 @@ export function SiteCard({
   useEffect(() => {
     const fetchLabels = async () => {
       try {
-        console.log("Fetching labels for site card");
         const labelsList = await SiteLabelService.getAll();
-        console.log("Labels received:", labelsList);
         const labelsMap: Record<string, string> = {};
         labelsList.forEach(label => {
           labelsMap[label.name] = label.color;
         });
-        console.log("Labels map created:", labelsMap);
         setLabels(labelsMap);
       } catch (error) {
         console.error("Error loading labels:", error);
@@ -167,23 +163,22 @@ export function SiteCard({
                   )}
                   
                   {/* Display site labels */}
-                  {rankedSite.site.siteLabels && rankedSite.site.siteLabels.length > 0 && (
-                    rankedSite.site.siteLabels.map(labelName => {
-                      console.log(`Rendering label ${labelName} with color ${labels[labelName]}`);
-                      return (
-                        <Badge 
-                          key={labelName} 
-                          variant="custom"
-                          className="text-xs text-white"
-                          style={{
-                            backgroundColor: labels[labelName] || '#888888'
-                          }}
-                        >
-                          {labelName}
-                        </Badge>
-                      );
-                    })
-                  )}
+                  {rankedSite.site.siteLabels?.map(labelName => {
+                    const labelColor = labels[labelName];
+                    return (
+                      <Badge 
+                        key={labelName} 
+                        variant="custom"
+                        className="text-xs text-white"
+                        style={{
+                          backgroundColor: labelColor || '#888888',
+                          border: 'none'
+                        }}
+                      >
+                        {labelName}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
               <Button 
