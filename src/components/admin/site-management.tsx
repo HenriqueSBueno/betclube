@@ -1,15 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, Edit } from "lucide-react";
+import { Trash, Edit, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSiteForm } from "@/components/admin/add-site-form";
 import { EditSiteForm } from "@/components/admin/edit-site-form";
 import { CsvImportExport } from "@/components/admin/csv-import-export";
 import { mockDb } from "@/lib/mockDb";
 import { BettingSite, RankingCategory } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SiteManagementProps {
   categories: RankingCategory[];
@@ -33,6 +36,7 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   const [editingSite, setEditingSite] = useState<BettingSite | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Load sites data
   useEffect(() => {
@@ -139,7 +143,7 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid lg:grid-cols-2 gap-6">
       <div>
         <Card>
           <CardHeader>
@@ -158,7 +162,7 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
         </div>
       </div>
       
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
             <CardTitle>Existing Sites ({sites.length})</CardTitle>
@@ -188,90 +192,176 @@ export function SiteManagement({ categories, onDataChange }: SiteManagementProps
             </AlertDialog>
           )}
         </CardHeader>
-        <CardContent className="max-h-[400px] overflow-y-auto">
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-4">Loading sites...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={sites.length > 0 && selectedSites.length === sites.length}
-                      onCheckedChange={toggleAllSites}
-                    />
-                  </TableHead>
-                  <TableHead>Site</TableHead>
-                  <TableHead>Categories</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>LTV</TableHead>
-                  <TableHead className="w-20">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sites.map((site) => (
-                  <TableRow key={site.id}>
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedSites.includes(site.id)}
-                        onCheckedChange={() => toggleSiteSelection(site.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{site.name}</div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {site.url}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-xs">
-                        {site.category.join(", ")}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">
-                        {site.commission ? `${site.commission}%` : "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">
-                        {site.ltv ? `$${site.ltv.toFixed(2)}` : "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEditSite(site)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
+            <ScrollArea className="h-[400px] w-full rounded-md">
+              <div className="w-full">
+                {isMobile ? (
+                  // Mobile layout: card-based view
+                  <div className="space-y-2 p-4">
+                    {sites.map((site) => (
+                      <div key={site.id} className="border rounded-md p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={selectedSites.includes(site.id)}
+                              onCheckedChange={() => toggleSiteSelection(site.id)}
+                            />
+                            <div className="font-medium">{site.name}</div>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditSite(site)}
+                            >
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete {site.name}?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete the site. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteSite(site.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete {site.name}?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the site. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteSite(site.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground flex items-center space-x-1">
+                          <ExternalLink className="h-3 w-3" />
+                          <a href={site.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                            {site.url}
+                          </a>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Categories:</span>
+                            <div className="text-xs">{site.category.join(", ")}</div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Commission:</span>
+                            <div>{site.commission ? `${site.commission}%` : "-"}</div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">LTV:</span>
+                            <div>{site.ltv ? `$${site.ltv.toFixed(2)}` : "-"}</div>
+                          </div>
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    ))}
+                  </div>
+                ) : (
+                  // Desktop layout: table view with improved spacing
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-card z-10">
+                      <TableRow>
+                        <TableHead className="w-[50px]">
+                          <Checkbox 
+                            checked={sites.length > 0 && selectedSites.length === sites.length}
+                            onCheckedChange={toggleAllSites}
+                          />
+                        </TableHead>
+                        <TableHead className="min-w-[200px]">Site</TableHead>
+                        <TableHead className="min-w-[150px]">Categories</TableHead>
+                        <TableHead className="min-w-[100px]">Commission</TableHead>
+                        <TableHead className="min-w-[100px]">LTV</TableHead>
+                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sites.map((site) => (
+                        <TableRow key={site.id} className="group">
+                          <TableCell className="p-2">
+                            <Checkbox 
+                              checked={selectedSites.includes(site.id)}
+                              onCheckedChange={() => toggleSiteSelection(site.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <div className="font-medium">{site.name}</div>
+                            <div className="text-sm text-muted-foreground flex items-center space-x-1 w-full max-w-[250px]">
+                              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                              <a 
+                                href={site.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="truncate hover:underline"
+                                title={site.url}
+                              >
+                                {site.url}
+                              </a>
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <div className="text-xs line-clamp-2">
+                              {site.category.join(", ")}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <div className="font-medium">
+                              {site.commission ? `${site.commission}%` : "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <div className="font-medium">
+                              {site.ltv ? `$${site.ltv.toFixed(2)}` : "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-right">
+                            <div className="flex items-center justify-end space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEditSite(site)}
+                                className="opacity-70 group-hover:opacity-100"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="opacity-70 group-hover:opacity-100"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete {site.name}?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete the site. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteSite(site.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
