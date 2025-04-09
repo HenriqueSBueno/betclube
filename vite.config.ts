@@ -1,6 +1,5 @@
 
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -11,7 +10,6 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -39,11 +37,13 @@ export default defineConfig(({ mode }) => ({
     },
     // Use esbuild for minification instead of terser
     minify: 'esbuild',
-    // Remove cssMinify that's causing the error
-    // cssMinify: 'lightningcss', <- Removing this line
     // Enable more aggressive optimizations
     target: 'es2015',
     assetsInlineLimit: 4096, // Inline assets smaller than 4kb
     chunkSizeWarningLimit: 1000, // Warn on chunks above 1MB
+  },
+  esbuild: {
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment',
   },
 }));

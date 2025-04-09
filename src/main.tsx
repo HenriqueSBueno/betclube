@@ -1,7 +1,8 @@
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
 // Preconnect to external domains for faster resource loading
 const preconnectLinks = [
@@ -23,15 +24,24 @@ preconnectLinks.forEach(link => {
 
 // Create root immediately to avoid layout shifts
 const rootElement = document.getElementById("root");
-const root = createRoot(rootElement!);
 
+// Check if rootElement exists before creating root
+if (!rootElement) {
+  console.error("Root element not found");
+} else {
+  const root = createRoot(rootElement);
+
+  root.render(
+    <React.StrictMode>
+      <ThemeProvider storageKey="betting-buzz-ui-theme">
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ThemeProvider>
+    </React.StrictMode>
+  );
+}
+
+// Import at the end to avoid hoisting issues
 import { ThemeProvider } from './lib/theme-provider';
 import { AuthProvider } from './providers/auth-provider';
-
-root.render(
-  <ThemeProvider storageKey="betting-buzz-ui-theme">
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </ThemeProvider>
-);

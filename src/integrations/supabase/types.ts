@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          created_at: string | null
+          dynamic_label_color: string
+          dynamic_label_offset: number
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dynamic_label_color?: string
+          dynamic_label_offset?: number
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dynamic_label_color?: string
+          dynamic_label_offset?: number
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       betting_sites: {
         Row: {
           admin_owner_id: string
@@ -405,6 +429,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_dynamic_time: {
+        Args: { offset_minutes: number }
+        Returns: string
+      }
+      can_manage_label: {
+        Args: { label_id: string }
+        Returns: boolean
+      }
       check_suggestion_rate_limit: {
         Args: { ip_address: string }
         Returns: boolean
