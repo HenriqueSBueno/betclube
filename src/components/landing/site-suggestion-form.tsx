@@ -5,7 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { SiteSuggestionService } from "@/services/site-suggestion-service";
 import { URLInput } from "@/components/ui/url-input";
 
-export function SiteSuggestionForm() {
+interface SiteSuggestionFormProps {
+  disabled?: boolean;
+}
+
+export function SiteSuggestionForm({ disabled }: SiteSuggestionFormProps) {
   const [url, setUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -64,12 +68,12 @@ export function SiteSuggestionForm() {
             onChange={setUrl}
             placeholder="exemplo.com"
             className="bg-white/90 dark:bg-black/70 backdrop-blur-sm"
-            disabled={isSubmitting}
+            disabled={disabled || isSubmitting}
           />
         </div>
         <Button 
           type="submit" 
-          disabled={isSubmitting}
+          disabled={disabled || isSubmitting}
           className="bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? "Enviando..." : "Sugerir Site"}

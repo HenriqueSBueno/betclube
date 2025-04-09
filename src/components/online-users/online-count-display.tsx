@@ -42,12 +42,13 @@ export function OnlineCountDisplay() {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-1.5 text-sm">
+          <div className="flex items-center gap-1.5 text-sm sm:text-xs">
             <div className="relative">
-              <Users className="h-4 w-4" />
-              <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              <Users className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 sm:h-1 sm:w-1 rounded-full bg-green-500 animate-pulse"></span>
             </div>
-            <span>{currentCount} usuários ativos</span>
+            <span>{currentCount}</span>
+            <span className="hidden sm:inline"> usuários ativos</span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">

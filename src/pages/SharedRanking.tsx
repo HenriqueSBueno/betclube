@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { SiteSuggestionForm } from "@/components/landing/site-suggestion-form";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { mockDb } from "@/lib/mockDb";
@@ -149,11 +150,21 @@ const SharedRanking = () => {
             </Card>
           ))}
         </div>
-        
+
         <div className="mt-8 text-center">
           <Link to="/">
             <Button variant="outline">Ver Todos os Rankings</Button>
           </Link>
+        </div>
+
+        <div className="w-full max-w-3xl mx-auto mt-12 p-6 bg-background rounded-lg border">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-center">Sugerir site</h2>
+            <p className="text-muted-foreground text-center">
+              Conhece um site de apostas que deveria estar na lista? Envie a URL abaixo e nosso time irá analisar.
+            </p>
+            <SiteSuggestionForm />
+          </div>
         </div>
       </main>
       

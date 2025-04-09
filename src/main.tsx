@@ -25,14 +25,13 @@ preconnectLinks.forEach(link => {
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
 
-// Use requestIdleCallback to defer non-critical work
-if ('requestIdleCallback' in window) {
-  window.requestIdleCallback(() => {
-    root.render(<App />);
-  });
-} else {
-  // Fallback for browsers that don't support requestIdleCallback
-  setTimeout(() => {
-    root.render(<App />);
-  }, 0);
-}
+import { ThemeProvider } from './lib/theme-provider';
+import { AuthProvider } from './providers/auth-provider';
+
+root.render(
+  <ThemeProvider storageKey="betting-buzz-ui-theme">
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </ThemeProvider>
+);

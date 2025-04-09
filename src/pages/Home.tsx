@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
 import { Check } from "lucide-react";
+import { SiteSuggestionForm } from "@/components/landing/site-suggestion-form";
 
 const Home = () => {
   // Use lower priority for initial fetch to improve FCP
@@ -68,6 +69,16 @@ const Home = () => {
           </div>
         )}
       </main>
+      
+      <div className="w-full max-w-3xl mx-auto mt-8 p-6 bg-background rounded-lg border">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-center">Sugerir site</h2>
+          <p className="text-muted-foreground text-center">
+            Conhece um site de apostas que deveria estar na lista? Envie a URL abaixo e nosso time irá analisar.
+          </p>
+          <SiteSuggestionForm />
+        </div>
+      </div>
       
       <Footer />
     </div>

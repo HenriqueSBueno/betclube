@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { RankingsService } from "@/services/rankings-service";
 import { Check } from "lucide-react";
 
+
 const Index = () => {
   const { isAuthenticated } = useAuth();
 
@@ -64,6 +65,8 @@ const Index = () => {
             ) : (
               <RankingTabs categories={categories} rankings={rankings} />
             )}
+
+            
           </>
         ) : (
           <LandingPage />
